@@ -16,7 +16,7 @@ const navItems = [
   { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: BarChart3, label: 'Polls', path: '/admin/polls' },
-  { icon: MessageSquare, label: 'Feedback', path: '/admin/feedback' },
+  { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 

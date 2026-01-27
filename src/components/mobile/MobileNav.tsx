@@ -6,7 +6,7 @@ const navItems = [
   { icon: Megaphone, label: 'Updates', path: '/mobile' },
   { icon: Calendar, label: 'Events', path: '/mobile/events' },
   { icon: BarChart3, label: 'Polls', path: '/mobile/polls' },
-  { icon: MessageSquare, label: 'Feedback', path: '/mobile/feedback' },
+  { icon: MessageSquare, label: 'Feedbacks', path: '/mobile/feedbacks' },
 ];
 
 export function MobileNav() {

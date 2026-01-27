@@ -8,11 +8,15 @@ import DisplayDashboard from "./pages/DisplayDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminPolls from "./pages/admin/AdminPolls";
+import AdminFeedbacks from "./pages/admin/AdminFeedbacks";
+import AdminSettings from "./pages/admin/AdminSettings";
 import MobileLayout from "./pages/mobile/MobileLayout";
 import MobileHome from "./pages/mobile/MobileHome";
 import MobileEvents from "./pages/mobile/MobileEvents";
 import MobilePolls from "./pages/mobile/MobilePolls";
-import MobileFeedback from "./pages/mobile/MobileFeedback";
+import MobileFeedbacks from "./pages/mobile/MobileFeedbacks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +35,10 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="announcements" element={<AdminAnnouncements />} />
+            <Route path="events" element={<AdminEvents />} />
+            <Route path="polls" element={<AdminPolls />} />
+            <Route path="feedbacks" element={<AdminFeedbacks />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           
           {/* Mobile Routes */}
@@ -38,7 +46,7 @@ const App = () => (
             <Route index element={<MobileHome />} />
             <Route path="events" element={<MobileEvents />} />
             <Route path="polls" element={<MobilePolls />} />
-            <Route path="feedback" element={<MobileFeedback />} />
+            <Route path="feedbacks" element={<MobileFeedbacks />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />
