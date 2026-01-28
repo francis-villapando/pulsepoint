@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, ArchiveX, Eye } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -60,7 +60,7 @@ export function ContentTable({ columns, data, onEdit, onDelete, onView }: Conten
                   )}
                   {onDelete && (
                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => onDelete(row)}>
-                      <Trash2 className="h-4 w-4" />
+                      <ArchiveX className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
