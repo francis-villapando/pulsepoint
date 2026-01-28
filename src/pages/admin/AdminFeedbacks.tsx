@@ -66,42 +66,6 @@ export default function AdminFeedbacks() {
           <h1 className="text-3xl font-display font-bold">Community Feedback</h1>
           <p className="text-muted-foreground">Manage and respond to community feedback</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="pulse" size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Add Response
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="font-display text-xl">Add Response</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-6 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="response">Response</Label>
-                <Textarea id="response" placeholder="Write your response to the feedback..." rows={4} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Update status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="reviewed">Reviewed</SelectItem>
-                    <SelectItem value="addressed">Addressed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                <Button variant="pulse">Save Response</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Stats Overview */}
@@ -172,7 +136,6 @@ export default function AdminFeedbacks() {
             data={mockFeedback}
             onEdit={() => {}}
             onDelete={() => {}}
-            onView={() => {}}
           />
         </CardContent>
       </Card>

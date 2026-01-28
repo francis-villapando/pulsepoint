@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Minus } from 'lucide-react';
+import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
 import { format } from 'date-fns';
 
 const columns = [
@@ -42,7 +43,18 @@ const columns = [
 
 export default function AdminPolls() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isUpdateConfirmationOpen, setIsUpdateConfirmationOpen] = useState(false);
   const [optionCount, setOptionCount] = useState(4);
+  const [pollData, setPollData] = useState({
+    question: '',
+    options: ['', '', '', ''],
+    startDate: '',
+    endDate: ''
+  });
+  const [editingPoll, setEditingPoll] = useState<any>(null);
+  const [editingOptionCount, setEditingOptionCount] = useState(4);
 
   const addOption = () => {
     if (optionCount < 10) setOptionCount(optionCount + 1);
@@ -50,6 +62,39 @@ export default function AdminPolls() {
 
   const removeOption = () => {
     if (optionCount > 2) setOptionCount(optionCount - 1);
+  };
+
+  const addEditOption = () => {
+    if (editingOptionCount < 10) setEditingOptionCount(editingOptionCount + 1);
+  };
+
+  const removeEditOption = () => {
+    if (editingOptionCount > 2) setEditingOptionCount(editingOptionCount - 1);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate form submission
+    const formData = new FormData(e.target as HTMLFormElement);
+    const options = Array.from({ length: optionCount }, (_, index) => 
+      formData.get(`option${index + 1}`) as string
+    ).filter(Boolean);
+    
+    setPollData({
+      question: formData.get('question') as string,
+      options,
+      startDate: formData.get('startDate') as string,
+      endDate: formData.get('endDate') as string
+    });
+    setIsOpen(false);
+    setIsConfirmationOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate edit submission
+    setIsEditOpen(false);
+    setIsUpdateConfirmationOpen(true);
   };
 
   return (
@@ -62,19 +107,19 @@ export default function AdminPolls() {
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button variant="pulse" size="lg">
+            <Button variant="pulse" size="lg" className="ml-auto">
               <Plus className="h-5 w-5 mr-2" />
               New Poll
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Create Poll</DialogTitle>
             </DialogHeader>
-            <form className="space-y-6 pt-4">
+            <form className="space-y-6 pt-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="question">Poll Question</Label>
-                <Textarea id="question" placeholder="Enter your poll question..." rows={3} />
+                <Textarea id="question" name="question" placeholder="Enter your poll question..." rows={3} required />
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -85,6 +130,7 @@ export default function AdminPolls() {
                       size="sm"
                       onClick={removeOption}
                       disabled={optionCount <= 2}
+                      type='button'
                     >
                       <Minus className="h-4 w-4 mr-1" />
                       Remove
@@ -94,19 +140,22 @@ export default function AdminPolls() {
                       size="sm"
                       onClick={addOption}
                       disabled={optionCount >= 10}
+                      type='button'
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Add
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   {Array.from({ length: optionCount }, (_, index) => (
                     <div key={index} className="space-y-2">
                       <Label htmlFor={`option${index + 1}`}>Option {index + 1}</Label>
                       <Input 
                         id={`option${index + 1}`} 
-                        placeholder={`Option ${index + 1}`} 
+                        name={`option${index + 1}`}
+                        placeholder={`Option ${index + 1}`}
+                        required 
                       />
                     </div>
                   ))}
@@ -115,16 +164,88 @@ export default function AdminPolls() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Start Date</Label>
-                  <Input id="startDate" type="date" />
+                  <Input id="startDate" name="startDate" type="date" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endDate">End Date</Label>
-                  <Input id="endDate" type="date" />
+                  <Input id="endDate" name="endDate" type="date" required />
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                <Button variant="pulse">Create Poll</Button>
+                <Button variant="outline" onClick={() => setIsOpen(false)} type="button">Cancel</Button>
+                <Button variant="pulse" type='submit'>Create Poll</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogTrigger asChild>
+            <div></div>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Update Poll</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-6 pt-4" onSubmit={handleEditSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="edit-question">Poll Question</Label>
+                <Textarea id="edit-question" name="question" placeholder="Enter your poll question..." rows={3} defaultValue={editingPoll?.question} />
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Options</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={removeEditOption}
+                      disabled={editingOptionCount <= 2}
+                      type='button'
+                    >
+                      <Minus className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addEditOption}
+                      disabled={editingOptionCount >= 10}
+                      type='button'
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {Array.from({ length: editingOptionCount }, (_, index) => (
+                    <div key={index} className="space-y-2">
+                      <Label htmlFor={`edit-option${index + 1}`}>Option {index + 1}</Label>
+                      <Input 
+                        id={`edit-option${index + 1}`} 
+                        name={`option${index + 1}`}
+                        placeholder={`Option ${index + 1}`}
+                        defaultValue={editingPoll?.options?.[index]?.text || ''}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-startDate">Start Date</Label>
+                  <Input id="edit-startDate" name="startDate" type="date" defaultValue={editingPoll?.startDate} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-endDate">End Date</Label>
+                  <Input id="edit-endDate" name="endDate" type="date" defaultValue={editingPoll?.endDate} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setIsEditOpen(false)} type="button">Cancel</Button>
+                <Button variant="pulse" type='submit'>Update Poll</Button>
               </div>
             </form>
           </DialogContent>
@@ -140,12 +261,39 @@ export default function AdminPolls() {
           <ContentTable 
             columns={columns}
             data={mockPolls}
-            onEdit={() => {}}
-            onDelete={() => {}}
-            onView={() => {}}
+            onEdit={(item) => {
+              setEditingPoll(item);
+              setEditingOptionCount(item.options?.length || 4);
+              setIsEditOpen(true);
+            }}
+            onDelete={(item) => console.log('Archive poll:', item)}
+            editTitle="Update Poll"
+            editDescription="Are you sure you want to update this poll? This will update the question and options displayed to the community."
           />
         </CardContent>
       </Card>
+
+      {/* Creation Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        title="Poll Created Successfully!"
+        description={`Your poll "${pollData.question}" has been published to the community display.`}
+        onConfirm={() => setIsConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
+      />
+
+      {/* Update Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isUpdateConfirmationOpen}
+        onOpenChange={setIsUpdateConfirmationOpen}
+        title="Poll Updated Successfully!"
+        description={`Your poll "${editingPoll?.question}" has been updated in the community display.`}
+        onConfirm={() => setIsUpdateConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
+      />
     </div>
   );
 }

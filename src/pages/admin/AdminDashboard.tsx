@@ -63,10 +63,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-display font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Manage your community content and engagement</p>
         </div>
-        <Button variant="pulse" size="lg">
-          <Plus className="h-5 w-5 mr-2" />
-          Create New
-        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -119,7 +115,6 @@ export default function AdminDashboard() {
             <ContentTable 
               columns={recentColumns}
               data={recentActivity}
-              onView={() => {}}
               onEdit={() => {}}
             />
           </CardContent>
@@ -175,13 +170,15 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader className="flex-row items-center justify-between pb-4">
           <CardTitle className="font-display">Recent Feedback</CardTitle>
-          <Button variant="ghost" size="sm">View All</Button>
+          <Button variant="ghost" size="sm">
+            <Eye className="h-4 w-4 mr-2" />
+              View All</Button>
         </CardHeader>
         <CardContent>
           <ContentTable 
             columns={feedbackColumns}
             data={mockFeedback}
-            onView={() => {}}
+            onEdit={() => {}}
           />
         </CardContent>
       </Card>

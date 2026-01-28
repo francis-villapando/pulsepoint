@@ -61,6 +61,7 @@ export function PollCard({ poll, onVote, hasVoted = false, isDisplay }: PollCard
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setSelectedOption(option.id)}
                   className={`
                     w-full text-left p-3 rounded-lg border-2 transition-all
