@@ -38,9 +38,19 @@ export interface PollOption {
 export interface Feedback {
   id: string;
   content: string;
-  category: 'suggestion' | 'complaint' | 'praise' | 'question';
+  category: 'praise' | 'suggestion' | 'complaint' | 'question';
   createdAt: Date;
   status: 'pending' | 'reviewed' | 'addressed';
+}
+
+export interface CarouselImage {
+  id: string;
+  imageUrl: string;
+  altText: string;
+  uploadDate: Date;
+  isActive: boolean;
+  eventTitle?: string;
+  eventDate?: Date;
 }
 
 export type ViewMode = 'display' | 'admin' | 'mobile';

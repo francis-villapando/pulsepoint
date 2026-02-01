@@ -1,19 +1,18 @@
 import { useState } from 'react';
-import { mockAnnouncements, mockEvents, mockPolls } from '@/data/mockData';
+import { mockAnnouncements, mockEvents, mockPolls, mockCarouselImages } from '@/data/mockData';
 import { AnnouncementCard } from '@/components/display/AnnouncementCard';
 import { EventCard } from '@/components/display/EventCard';
 import { PollCard } from '@/components/display/PollCard';
 import { QRCodeSection } from '@/components/display/QRCodeSection';
 import { GestureHint } from '@/components/display/GestureHint';
+import { ImageCarousel } from '@/components/display/ImageCarousel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Megaphone, 
   Calendar, 
   BarChart3, 
-  Radio,
-  Clock,
-  MapPin
+  Radio
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -21,8 +20,6 @@ export default function DisplayDashboard() {
   const [activeTab, setActiveTab] = useState('announcements');
   const currentTime = new Date();
   const pinnedAnnouncements = mockAnnouncements.filter(a => a.isPinned);
-  const upcomingEvents = mockEvents.slice(0, 3);
-  const activePoll = mockPolls.find(p => p.isActive);
 
   return (
     <div className="min-h-screen bg-background display-mode">
@@ -53,6 +50,13 @@ export default function DisplayDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Image Carousel */}
+      <section className="container mx-auto px-8 py-8 animate-slide-up">
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <ImageCarousel images={mockCarouselImages} />
+        </div>
+      </section>
 
       {/* Main Content */}
       <main className="container mx-auto px-8 py-8">
@@ -139,43 +143,6 @@ export default function DisplayDashboard() {
             <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <QRCodeSection />
             </div>
-
-            {/* Quick Events */}
-            <section className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-display font-semibold">Coming Up</h3>
-              </div>
-              <div className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <div 
-                    key={event.id} 
-                    className="glass-card rounded-xl p-4 hover:shadow-elevated transition-all cursor-pointer"
-                  >
-                    <h4 className="font-semibold mb-2">{event.title}</h4>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{format(event.date, 'MMM d')} • {event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{event.venue}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Active Poll Preview */}
-            {activePoll && (
-              <section className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
-                <div className="flex items-center gap-3 mb-4">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-display font-semibold">Active Poll</h3>
-                </div>
-                <PollCard poll={activePoll} />
-              </section>
-            )}
           </div>
         </div>
       </main>

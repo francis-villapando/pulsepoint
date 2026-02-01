@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+  { icon: Radio, label: 'Carousel', path: '/admin/carousel' },
   { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: BarChart3, label: 'Polls', path: '/admin/polls' },
