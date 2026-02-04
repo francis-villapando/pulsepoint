@@ -28,7 +28,7 @@ export function AnnouncementCard({ announcement, onClick, isDisplay }: Announcem
         hover:shadow-elevated hover:scale-[1.02] border-l-4 group
         ${announcement.isPinned ? 'border-l-secondary' : 'border-l-primary'}
         ${isDisplay ? 'p-4' : 'p-3'}
-        w-[400px] h-[200px]
+        w-[400px] max-w-full h-[200px] aspect-400x200
       `}
       onClick={onClick}
     >

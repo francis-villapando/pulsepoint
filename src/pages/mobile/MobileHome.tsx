@@ -1,6 +1,7 @@
-import { mockAnnouncements, mockPolls } from '@/data/mockData';
+import { mockAnnouncements, mockPolls, mockCarouselImages } from '@/data/mockData';
 import { AnnouncementCard } from '@/components/display/AnnouncementCard';
 import { PollCard } from '@/components/display/PollCard';
+import { ImageCarousel } from '@/components/display/ImageCarousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -22,17 +23,21 @@ export default function MobileHome() {
         </CardContent>
       </Card>
 
-      {/* Active Poll */}
-      {activePoll && (
-        <section>
-          <h2 className="text-lg font-display font-semibold mb-3">Quick Poll</h2>
-          <PollCard poll={activePoll} />
-        </section>
-      )}
-
-      {/* Announcements */}
+      {/* Image Carousel */}
       <section>
-        <h2 className="text-lg font-display font-semibold mb-3">Latest Updates</h2>
+        <h2 className="text-lg font-display font-semibold mb-3">Recent Events</h2>
+        <ImageCarousel 
+          images={mockCarouselImages}
+          className="w-full"
+          variant="default"
+          autoPlay={true}
+          autoPlayInterval={5000}
+        />
+      </section>
+
+      {/* Announcements and Advisory */}
+      <section>
+        <h2 className="text-lg font-display font-semibold mb-3">Announcements and Advisory</h2>
         <div className="space-y-3">
           {mockAnnouncements.map((announcement) => (
             <AnnouncementCard 

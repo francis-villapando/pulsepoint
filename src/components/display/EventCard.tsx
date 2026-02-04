@@ -28,7 +28,7 @@ export function EventCard({ event, onClick, isDisplay }: EventCardProps) {
         overflow-hidden cursor-pointer transition-all duration-300 
         hover:shadow-elevated hover:scale-[1.02] group
         ${isDisplay ? 'p-3' : 'p-2'}
-        w-[400px] h-[230px]
+        w-[400px] max-w-full h-[230px]
       `}
       onClick={onClick}
     >
