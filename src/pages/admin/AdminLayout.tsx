@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/logout', { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
@@ -28,13 +37,13 @@ export default function AdminLayout() {
                     <User className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-medium">Admin User</p>
-                    <p className="text-xs text-muted-foreground">admin@pulsepoint.gov</p>
+                    <p className="text-sm font-medium">{user?.email || 'admin@pulsepoint.gov'}</p>
+                    <p className="text-xs text-muted-foreground">Admin User</p>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <User className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

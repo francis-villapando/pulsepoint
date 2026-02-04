@@ -3,9 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import DisplayDashboard from "./pages/DisplayDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminLogout from "./pages/admin/AdminLogout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminEvents from "./pages/admin/AdminEvents";
@@ -19,6 +22,7 @@ import MobileEvents from "./pages/mobile/MobileEvents";
 import MobilePolls from "./pages/mobile/MobilePolls";
 import MobileFeedbacks from "./pages/mobile/MobileFeedbacks";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -28,31 +32,39 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/display" element={<DisplayDashboard />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="announcements" element={<AdminAnnouncements />} />
-            <Route path="events" element={<AdminEvents />} />
-            <Route path="polls" element={<AdminPolls />} />
-            <Route path="feedbacks" element={<AdminFeedbacks />} />
-            <Route path="carousel" element={<AdminCarousel />} />
-            <Route path="archives" element={<AdminArchives />} />
-          </Route>
-          
-          {/* Mobile Routes */}
-          <Route path="/mobile" element={<MobileLayout />}>
-            <Route index element={<MobileHome />} />
-            <Route path="events" element={<MobileEvents />} />
-            <Route path="polls" element={<MobilePolls />} />
-            <Route path="feedbacks" element={<MobileFeedbacks />} />
-          </Route>
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/display/*" element={<DisplayDashboard />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/logout" element={<AdminLogout />} />
+            <Route path="/admin/*" element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
+              <Route path="events" element={<AdminEvents />} />
+              <Route path="polls" element={<AdminPolls />} />
+              <Route path="feedbacks" element={<AdminFeedbacks />} />
+              <Route path="carousel" element={<AdminCarousel />} />
+              <Route path="archives" element={<AdminArchives />} />
+            </Route>
+            
+            {/* Mobile Routes */}
+            <Route path="/mobile/*" element={<MobileLayout />}>
+              <Route index element={<MobileHome />} />
+              <Route path="events" element={<MobileEvents />} />
+              <Route path="polls" element={<MobilePolls />} />
+              <Route path="feedbacks" element={<MobileFeedbacks />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
