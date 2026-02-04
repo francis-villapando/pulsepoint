@@ -27,35 +27,36 @@ export function EventCard({ event, onClick, isDisplay }: EventCardProps) {
       className={`
         overflow-hidden cursor-pointer transition-all duration-300 
         hover:shadow-elevated hover:scale-[1.02] group
-        ${isDisplay ? 'p-4' : ''}
+        ${isDisplay ? 'p-3' : 'p-2'}
+        w-[400px] h-[230px]
       `}
       onClick={onClick}
     >
-      <div className={`${config.color} px-4 py-3 flex items-center gap-2`}>
-        <Icon className="h-5 w-5" />
-        <span className="font-medium capitalize">{event.category}</span>
+      <div className={`${config.color} px-3 py-2 flex items-center gap-2`}>
+        <Icon className="h-4 w-4" />
+        <span className="font-medium text-xs capitalize">{event.category}</span>
       </div>
-      <CardHeader className={isDisplay ? 'pb-3' : 'pb-2'}>
-        <CardTitle className={`${isDisplay ? 'text-xl' : 'text-lg'} font-display group-hover:text-primary transition-colors`}>
+      <CardHeader className={isDisplay ? 'pb-2' : 'pb-1'}>
+        <CardTitle className={`${isDisplay ? 'text-lg' : 'text-base'} font-display group-hover:text-primary transition-colors line-clamp-1`}>
           {event.title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p className={`text-muted-foreground ${isDisplay ? 'text-base' : 'text-sm'} line-clamp-2`}>
+      <CardContent className="space-y-2">
+        <p className={`text-muted-foreground ${isDisplay ? 'text-sm' : 'text-xs'} line-clamp-2`}>
           {event.description}
         </p>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-primary" />
-            <span>{format(event.date, 'EEEE, MMMM d')}</span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs">
+            <Calendar className="h-3 w-3 text-primary" />
+            <span>{format(event.date, 'MMM d')}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-2 text-xs">
+            <Clock className="h-3 w-3 text-primary" />
             <span>{event.time}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-primary" />
-            <span>{event.venue}</span>
+          <div className="flex items-center gap-2 text-xs">
+            <MapPin className="h-3 w-3 text-primary" />
+            <span className="line-clamp-1">{event.venue}</span>
           </div>
         </div>
       </CardContent>

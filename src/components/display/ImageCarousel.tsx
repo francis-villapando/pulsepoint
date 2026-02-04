@@ -53,19 +53,8 @@ export function ImageCarousel({ images, className, variant = 'default', autoPlay
 
     api.on("select", onSelect);
 
-    // Stop auto-play on hover (for desktop)
-    const carouselElement = api.containerNode();
-    if (carouselElement) {
-      carouselElement.addEventListener('mouseenter', stopAutoPlay);
-      carouselElement.addEventListener('mouseleave', startAutoPlay);
-    }
-
     return () => {
       stopAutoPlay();
-      if (carouselElement) {
-        carouselElement.removeEventListener('mouseenter', stopAutoPlay);
-        carouselElement.removeEventListener('mouseleave', startAutoPlay);
-      }
     };
   }, [api, autoPlay, autoPlayInterval]);
 

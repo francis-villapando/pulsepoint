@@ -22,11 +22,16 @@ export default function DisplayDashboard() {
   const [activeTab, setActiveTab] = useState('announcements');
   const [currentPage, setCurrentPage] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [announcementsPage, setAnnouncementsPage] = useState(0);
+  const [eventsPage, setEventsPage] = useState(0);
+  const [pollsPage, setPollsPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pages = [
     { id: 0, title: 'Carousel & QR', icon: '🖼️' },
-    { id: 1, title: 'Announcements', icon: '📢' },
-    { id: 2, title: 'Content', icon: '📋' }
+    { id: 1, title: 'Featured Announcements', icon: '📢' },
+    { id: 2, title: 'Announcements', icon: '📢' },
+    { id: 3, title: 'Events', icon: '📅' },
+    { id: 4, title: 'Polls', icon: '📊' }
   ];
   const currentTime = new Date();
   const pinnedAnnouncements = mockAnnouncements.filter(a => a.isPinned);
@@ -183,86 +188,76 @@ export default function DisplayDashboard() {
           </div>
         </section>
 
-        {/* Page 2: Featured Announcements */}
+        {/* Page 2: Announcements */}
         <section className="snap-start min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-8 py-8 animate-slide-up">
-            {pinnedAnnouncements.length > 0 && (
-              <div className="space-y-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <Megaphone className="h-6 w-6 text-secondary" />
-                  <h2 className="text-2xl font-display font-semibold">Important Updates</h2>
-                </div>
-                <div className="grid gap-4">
-                  {pinnedAnnouncements.map((announcement) => (
-                    <AnnouncementCard
-                      key={announcement.id}
-                      announcement={announcement}
-                      isDisplay
-                    />
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Megaphone className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Announcements and Advisory</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                  {mockAnnouncements.map((announcement, index) => (
+                    <div key={announcement.id} style={{ order: index }}>
+                      <AnnouncementCard
+                        announcement={announcement}
+                        isDisplay
+                      />
+                    </div>
                   ))}
                 </div>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
               </div>
-            )}
+            </div>
           </div>
         </section>
 
-        {/* Page 3: Content Tabs */}
+        {/* Page 4: Events */}
         <section className="snap-start min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-8 py-8 animate-slide-up">
-            <div className="grid grid-cols-12 gap-8">
-              <div className="col-span-8 space-y-8">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                  <TabsList className="glass-card p-1 h-auto">
-                    <TabsTrigger value="announcements" className="text-lg px-6 py-3 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                      <Megaphone className="h-5 w-5 mr-2" />
-                      Announcements
-                    </TabsTrigger>
-                    <TabsTrigger value="events" className="text-lg px-6 py-3 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                      <Calendar className="h-5 w-5 mr-2" />
-                      Events
-                    </TabsTrigger>
-                    <TabsTrigger value="polls" className="text-lg px-6 py-3 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                      <BarChart3 className="h-5 w-5 mr-2" />
-                      Polls
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="announcements" className="mt-6">
-                    <div className="grid gap-4">
-                      {mockAnnouncements.filter(a => !a.isPinned).map((announcement) => (
-                        <AnnouncementCard
-                          key={announcement.id}
-                          announcement={announcement}
-                          isDisplay
-                        />
-                      ))}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Calendar className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Events</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                  {mockEvents.map((event, index) => (
+                    <div key={event.id} style={{ order: index }}>
+                      <EventCard
+                        event={event}
+                        isDisplay
+                      />
                     </div>
-                  </TabsContent>
+                  ))}
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  <TabsContent value="events" className="mt-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      {mockEvents.map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          isDisplay
-                        />
-                      ))}
+        {/* Page 5: Polls */}
+        <section className="snap-start min-h-screen flex items-center justify-center">
+          <div className="container mx-auto px-8 py-8 animate-slide-up">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <BarChart3 className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Polls</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-1 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                  {mockPolls.map((poll, index) => (
+                    <div key={poll.id} style={{ order: index }}>
+                      <PollCard
+                        poll={poll}
+                        isDisplay
+                      />
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="polls" className="mt-6">
-                    <div className="grid gap-6">
-                      {mockPolls.map((poll) => (
-                        <PollCard
-                          key={poll.id}
-                          poll={poll}
-                          isDisplay
-                        />
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                  ))}
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
               </div>
             </div>
           </div>
