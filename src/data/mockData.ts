@@ -1,4 +1,4 @@
-import { Announcement, Event, Poll, Feedback } from '@/types/pulsepoint';
+import { Announcement, Event, Poll, Feedback, CarouselImage } from '@/types/pulsepoint';
 
 export const mockAnnouncements: Announcement[] = [
   {
@@ -139,5 +139,53 @@ export const mockFeedback: Feedback[] = [
     category: 'question',
     createdAt: new Date('2026-01-17'),
     status: 'reviewed',
+  },
+];
+
+export const mockCarouselImages: CarouselImage[] = [
+  {
+    id: '1',
+    imageUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&h=400&fit=crop',
+    altText: 'Community Clean-Up Day 2026',
+    uploadDate: new Date('2026-01-20'),
+    isActive: true,
+    eventTitle: 'Community Clean-Up Day',
+    eventDate: new Date('2026-01-17'),
+  },
+  {
+    id: '2',
+    imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=400&fit=crop',
+    altText: 'Farmers Market Opening',
+    uploadDate: new Date('2026-01-15'),
+    isActive: true,
+    eventTitle: 'Farmers Market Opening',
+    eventDate: new Date('2026-01-10'),
+  },
+  {
+    id: '3',
+    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+    altText: 'Youth Basketball Tournament Finals',
+    uploadDate: new Date('2026-01-10'),
+    isActive: true,
+    eventTitle: 'Youth Basketball Tournament Finals',
+    eventDate: new Date('2026-01-05'),
+  },
+  {
+    id: '4',
+    imageUrl: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=400&fit=crop',
+    altText: 'Digital Literacy Workshop',
+    uploadDate: new Date('2026-01-05'),
+    isActive: true,
+    eventTitle: 'Digital Literacy Workshop',
+    eventDate: new Date('2025-12-28'),
+  },
+  {
+    id: '5',
+    imageUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&h=400&fit=crop',
+    altText: 'Cultural Heritage Festival',
+    uploadDate: new Date('2025-12-25'),
+    isActive: true,
+    eventTitle: 'Cultural Heritage Festival',
+    eventDate: new Date('2025-12-20'),
   },
 ];
