@@ -6,7 +6,7 @@ export function GestureHint() {
       <div className="flex items-center gap-6 text-muted-foreground">
         <div className="flex items-center gap-2">
           <ChevronLeft className="h-5 w-5 gesture-hint" />
-          <span className="text-sm font-medium">Swipe to navigate</span>
+          <span className="text-sm font-medium">Swipe  up and down to navigate</span>
           <ChevronRight className="h-5 w-5 gesture-hint" style={{ animationDelay: '0.5s' }} />
         </div>
         <div className="w-px h-6 bg-border" />

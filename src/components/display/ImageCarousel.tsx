@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Card } from '@/components/ui/card';
@@ -12,9 +12,63 @@ interface ImageCarouselProps {
     eventTitle?: string;
     eventDate?: Date;
   }[];
+  className?: string;
+  variant?: 'default' | 'background';
+  autoPlay?: boolean;
+  autoPlayInterval?: number;
 }
 
-export function ImageCarousel({ images }: ImageCarouselProps) {
+export function ImageCarousel({ images, className, variant = 'default', autoPlay = true, autoPlayInterval = 5000 }: ImageCarouselProps) {
+  // Add extra images for peek effect
+  const extendedImages = [...images, ...images, ...images];
+  const [api, setApi] = useState<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const autoPlayRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!api || !autoPlay) return;
+
+    const startAutoPlay = () => {
+      if (autoPlayRef.current) return;
+      
+      autoPlayRef.current = window.setInterval(() => {
+        api.scrollNext();
+      }, autoPlayInterval);
+    };
+
+    const stopAutoPlay = () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+        autoPlayRef.current = null;
+      }
+    };
+
+    // Start auto-play
+    startAutoPlay();
+
+    // Update current index when carousel changes
+    const onSelect = () => {
+      setCurrentIndex(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+
+    // Stop auto-play on hover (for desktop)
+    const carouselElement = api.containerNode();
+    if (carouselElement) {
+      carouselElement.addEventListener('mouseenter', stopAutoPlay);
+      carouselElement.addEventListener('mouseleave', startAutoPlay);
+    }
+
+    return () => {
+      stopAutoPlay();
+      if (carouselElement) {
+        carouselElement.removeEventListener('mouseenter', stopAutoPlay);
+        carouselElement.removeEventListener('mouseleave', startAutoPlay);
+      }
+    };
+  }, [api, autoPlay, autoPlayInterval]);
+
   if (!images || images.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-8 text-center">
@@ -32,46 +86,73 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
   }
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
-      <Carousel className="relative">
-        <CarouselContent>
-          {images.map((image) => (
-            <CarouselItem key={image.id}>
-              <div className="relative aspect-[16/9] overflow-hidden">
+    <div className={`relative overflow-hidden ${className || ''}`}>
+      {variant === 'background' ? (
+        // Background variant - full-screen carousel with peek effect
+        <Carousel
+          className="w-full h-full relative overflow-hidden"
+          setApi={setApi}
+          opts={{ loop: true, align: "center" }}
+        >
+          <CarouselContent className="gap-0">
+            {images.map((image) => (
+              <CarouselItem
+                key={image.id}
+                className="basis-[95%] md:basis-[90%]"
+              >
                 <img
                   src={image.imageUrl}
                   alt={image.altText}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                
-                {/* Image Overlay Content */}
-                <div className="absolute bottom-6 left-6 right-6 text-white">
-                  <div className="max-w-4xl">
-                    {image.eventTitle && (
-                      <h3 className="text-2xl md:text-3xl font-display font-bold mb-2 drop-shadow-lg">
-                        {image.eventTitle}
-                      </h3>
-                    )}
-                    {image.eventDate && (
-                      <p className="text-lg text-white/90 drop-shadow-md">
-                        {format(image.eventDate, 'MMMM d, yyyy')}
-                      </p>
-                    )}
-                    <p className="text-sm text-white/80 mt-2 drop-shadow-md max-w-2xl">
-                      {image.altText}
-                    </p>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      ) : (
+        // Default variant - card layout
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <Carousel className="relative" setApi={setApi} opts={{ loop: true }}>
+            <CarouselContent>
+              {images.map((image) => (
+                <CarouselItem key={image.id}>
+                  <div className="relative aspect-[16/9] overflow-hidden">
+                    <img
+                      src={image.imageUrl}
+                      alt={image.altText}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    
+                    {/* Image Overlay Content */}
+                    <div className="absolute bottom-6 left-6 right-6 text-white">
+                      <div className="max-w-4xl">
+                        {image.eventTitle && (
+                          <h3 className="text-2xl md:text-3xl font-display font-bold mb-2 drop-shadow-lg">
+                            {image.eventTitle}
+                          </h3>
+                        )}
+                        {image.eventDate && (
+                          <p className="text-lg text-white/90 drop-shadow-md">
+                            {format(image.eventDate, 'MMMM d, yyyy')}
+                          </p>
+                        )}
+                        <p className="text-sm text-white/80 mt-2 drop-shadow-md max-w-2xl">
+                          {image.altText}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
 
-        {/* Built-in Navigation Buttons */}
-        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/20" />
-        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/20" />
-      </Carousel>
+            {/* Built-in Navigation Buttons */}
+            <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/20" />
+            <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/20" />
+          </Carousel>
+        </div>
+      )}
     </div>
   );
 }
