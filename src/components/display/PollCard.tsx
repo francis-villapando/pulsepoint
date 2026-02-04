@@ -15,14 +15,14 @@ interface PollCardProps {
 
 export function PollCard({ poll, onVote, hasVoted = false, isDisplay }: PollCardProps) {
   return (
-    <Card className={`overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-elevated hover:scale-[1.02] ${isDisplay ? 'p-3' : 'p-2'} w-full h-[300px]`}>
+    <Card className={`overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-elevated hover:scale-[1.02] group ${isDisplay ? 'p-3' : 'p-2'} w-full h-[300px]`}>
       <CardHeader className="pb-2">
         <div className="flex items-start gap-2">
           <div className="p-1.5 rounded-lg gradient-primary">
             <BarChart3 className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className={`${isDisplay ? 'text-lg' : 'text-base'} font-display line-clamp-2`}>
+            <CardTitle className={`${isDisplay ? 'text-lg' : 'text-base'} font-display group-hover:text-primary transition-colors line-clamp-1`}>
               {poll.question}
             </CardTitle>
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">

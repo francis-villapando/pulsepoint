@@ -27,11 +27,10 @@ export default function DisplayDashboard() {
   const [pollsPage, setPollsPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pages = [
-    { id: 0, title: 'Carousel & QR', icon: '🖼️' },
-    { id: 1, title: 'Featured Announcements', icon: '📢' },
-    { id: 2, title: 'Announcements', icon: '📢' },
-    { id: 3, title: 'Events', icon: '📅' },
-    { id: 4, title: 'Polls', icon: '📊' }
+    { id: 0, title: 'Past Events & QR', icon: '🖼️' },
+    { id: 1, title: 'Announcements and Advisory', icon: '📢' },
+    { id: 2, title: 'Events', icon: '📅' },
+    { id: 3, title: 'Polls', icon: '📊' }
   ];
   const currentTime = new Date();
   const pinnedAnnouncements = mockAnnouncements.filter(a => a.isPinned);
@@ -197,7 +196,7 @@ export default function DisplayDashboard() {
                 <h2 className="text-2xl font-display font-semibold">Announcements and Advisory</h2>
               </div>
               <div className="relative">
-                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
                   {mockAnnouncements.map((announcement, index) => (
                     <div key={announcement.id} style={{ order: index }}>
                       <AnnouncementCard
@@ -213,7 +212,7 @@ export default function DisplayDashboard() {
           </div>
         </section>
 
-        {/* Page 4: Events */}
+        {/* Page 3: Events */}
         <section className="snap-start min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-8 py-8 animate-slide-up">
             <div className="space-y-8">
@@ -222,7 +221,7 @@ export default function DisplayDashboard() {
                 <h2 className="text-2xl font-display font-semibold">Events</h2>
               </div>
               <div className="relative">
-                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
                   {mockEvents.map((event, index) => (
                     <div key={event.id} style={{ order: index }}>
                       <EventCard
@@ -238,7 +237,7 @@ export default function DisplayDashboard() {
           </div>
         </section>
 
-        {/* Page 5: Polls */}
+        {/* Page 4: Polls */}
         <section className="snap-start min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-8 py-8 animate-slide-up">
             <div className="space-y-8">
@@ -247,7 +246,7 @@ export default function DisplayDashboard() {
                 <h2 className="text-2xl font-display font-semibold">Polls</h2>
               </div>
               <div className="relative">
-                <div className="grid grid-rows-1 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto">
+                <div className="grid grid-rows-1 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
                   {mockPolls.map((poll, index) => (
                     <div key={poll.id} style={{ order: index }}>
                       <PollCard

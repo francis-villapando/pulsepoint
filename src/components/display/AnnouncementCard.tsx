@@ -25,7 +25,7 @@ export function AnnouncementCard({ announcement, onClick, isDisplay }: Announcem
     <Card 
       className={`
         relative overflow-hidden cursor-pointer transition-all duration-300 
-        hover:shadow-elevated hover:scale-[1.02] border-l-4 
+        hover:shadow-elevated hover:scale-[1.02] border-l-4 group
         ${announcement.isPinned ? 'border-l-secondary' : 'border-l-primary'}
         ${isDisplay ? 'p-4' : 'p-3'}
         w-[400px] h-[200px]
@@ -43,7 +43,7 @@ export function AnnouncementCard({ announcement, onClick, isDisplay }: Announcem
             <Icon className={`${isDisplay ? 'h-5 w-5' : 'h-3 w-3'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className={`${isDisplay ? 'text-lg' : 'text-base'} font-display leading-tight line-clamp-1`}>
+            <CardTitle className={`${isDisplay ? 'text-lg' : 'text-base'} font-display leading-tight line-clamp-1 group-hover:text-primary transition-colors`}>
               {announcement.title}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
