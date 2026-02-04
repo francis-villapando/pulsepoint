@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { mockCarouselImages } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import { CarouselImage } from '@/types/pulsepoint';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';
@@ -12,44 +12,85 @@ import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
 import { toast } from '@/hooks/use-toast';
 
 const columns = [
-  { key: 'imageUrl', label: 'Image', render: (value: string, row: CarouselImage) => (
-    <div className="flex items-center gap-3">
-      <div className="h-12 w-12 rounded-lg overflow-hidden border">
-        <img src={value} alt={row.altText} className="w-full h-full object-cover" />
+  {
+    key: 'imageUrl', label: 'Image', render: (value: string, row: CarouselImage) => (
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 rounded-lg overflow-hidden border">
+          <img src={value} alt={row.altText} className="w-full h-full object-cover" />
+        </div>
       </div>
-    </div>
-  )},
-  { key: 'altText', label: 'Title', render: (value: string, row: CarouselImage) => (
-    <div>
-      <p className="font-medium">{value}</p>
-      {row.eventTitle && (
-        <p className="text-sm text-muted-foreground">{row.eventTitle}</p>
-      )}
-    </div>
-  )},
-  { key: 'uploadDate', label: 'Date', render: (value: Date) => format(value, 'MMM d, yyyy') },
-  { key: 'isActive', label: 'Status', render: (value: boolean) => (
-    <Badge className="bg-pulse-success text-white">Active</Badge>
-  )},
+    )
+  },
+  {
+    key: 'altText', label: 'Title', render: (value: string, row: CarouselImage) => (
+      <div>
+        <p className="font-medium">{value}</p>
+        {row.eventTitle && (
+          <p className="text-sm text-muted-foreground">{row.eventTitle}</p>
+        )}
+      </div>
+    )
+  },
+  {
+    key: 'createdAt', label: 'Date', render: (value: Date) => {
+      try {
+        return format(new Date(value), 'MMM d, yyyy');
+      } catch (e) {
+        return 'Invalid Date';
+      }
+    }
+  },
+  {
+    key: 'isActive', label: 'Status', render: (value: boolean) => (
+      <Badge className="bg-pulse-success text-white">Active</Badge>
+    )
+  },
 ];
 
 export default function AdminCarousel() {
-  const [images, setImages] = useState<CarouselImage[]>(mockCarouselImages);
+  const [images, setImages] = useState<CarouselImage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<CarouselImage | null>(null);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [deletingImage, setDeletingImage] = useState<CarouselImage | null>(null);
 
-  const handleAddImage = (newImage: Omit<CarouselImage, 'id' | 'uploadDate'>) => {
-    const image: CarouselImage = {
-      ...newImage,
-      id: `img_${Date.now()}`,
-      uploadDate: new Date(),
-      isActive: true, // Always active by default
-    };
-    setImages(prev => [image, ...prev]);
-    setIsAddFormOpen(false);
+  const fetchImages = async () => {
+    try {
+      const data = await api.carousel.getAll();
+      setImages(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch carousel images",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const handleAddImage = async (newImage: Omit<CarouselImage, 'id' | 'uploadDate'>) => {
+    try {
+      await api.carousel.create(newImage);
+      toast({
+        title: "Success",
+        description: "Image added successfully",
+      });
+      fetchImages();
+      setIsAddFormOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add image",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditImage = (image: CarouselImage) => {
@@ -57,27 +98,40 @@ export default function AdminCarousel() {
     setIsEditFormOpen(true);
   };
 
-  const handleUpdateImage = (updatedImage: CarouselImage) => {
-    setImages(prev => prev.map(img => img.id === updatedImage.id ? updatedImage : img));
-    setIsEditFormOpen(false);
-    setEditingImage(null);
-  };
-
-  const handleDeleteImage = (image: CarouselImage) => {
-    setDeletingImage(image);
-    setIsDeleteConfirmationOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (deletingImage) {
-      setImages(prev => prev.filter(img => img.id !== deletingImage.id));
+  const handleUpdateImage = async (updatedImage: CarouselImage) => {
+    try {
+      await api.carousel.update(updatedImage.id, updatedImage);
       toast({
-        title: "Image Deleted",
-        description: `${deletingImage.altText} has been removed from the carousel.`,
+        title: "Success",
+        description: "Image updated successfully",
+      });
+      fetchImages();
+      setIsEditFormOpen(false);
+      setEditingImage(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update image",
+        variant: "destructive",
       });
     }
-    setIsDeleteConfirmationOpen(false);
-    setDeletingImage(null);
+  };
+
+  const handleDeleteImage = async (image: CarouselImage) => {
+    try {
+      await api.carousel.delete(image.id);
+      toast({
+        title: "Image Deleted",
+        description: `${image.altText} has been removed from the carousel.`,
+      });
+      fetchImages();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete image",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -88,7 +142,7 @@ export default function AdminCarousel() {
           <h1 className="text-3xl font-display font-bold">Carousel Management</h1>
           <p className="text-muted-foreground">Manage images displayed in the community display</p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsAddFormOpen(true)}
           className="gradient-primary text-primary-foreground"
         >
@@ -116,7 +170,7 @@ export default function AdminCarousel() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="gradient-info text-info-foreground">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -128,14 +182,14 @@ export default function AdminCarousel() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="gradient-success text-success-foreground">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm opacity-90">Recent Uploads</p>
                     <p className="text-2xl font-bold">
-                      {images.filter(img => 
+                      {images.filter(img =>
                         img.uploadDate > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                       ).length}
                     </p>
@@ -147,7 +201,7 @@ export default function AdminCarousel() {
           </div>
 
           {/* Content Table */}
-          <ContentTable 
+          <ContentTable
             columns={columns}
             data={images}
             onEdit={handleEditImage}

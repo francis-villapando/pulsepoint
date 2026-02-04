@@ -1,60 +1,113 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { Announcement, Event } from '@/types/pulsepoint';
+import { mockPolls, mockFeedback } from '@/data/mockData'; // Keep mock polls/feedback for now
 import { StatsCard } from '@/components/admin/StatsCard';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockAnnouncements, mockEvents, mockPolls, mockFeedback } from '@/data/mockData';
-import { 
-  Megaphone, 
-  Calendar, 
-  BarChart3, 
+import {
+  Megaphone,
+  Calendar,
+  BarChart3,
   MessageSquare,
-  Users,
-  TrendingUp,
-  Plus,
   Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const recentColumns = [
   { key: 'title', label: 'Title' },
-  { key: 'type', label: 'Type', render: (value: string) => (
-    <Badge variant="outline" className="capitalize">{value}</Badge>
-  )},
-  { key: 'date', label: 'Date' },
-  { key: 'status', label: 'Status', render: (value: string) => (
-    <Badge className={value === 'active' ? 'bg-pulse-success' : 'bg-muted text-muted-foreground'}>
-      {value}
-    </Badge>
-  )},
-];
-
-const recentActivity = [
-  { id: 1, title: 'Community Clean-Up Day', type: 'announcement', date: 'Jan 20', status: 'active' },
-  { id: 2, title: 'Farmers Market', type: 'event', date: 'Jan 25', status: 'active' },
-  { id: 3, title: 'Budget Priority Poll', type: 'poll', date: 'Jan 15', status: 'active' },
-  { id: 4, title: 'Water Main Notice', type: 'announcement', date: 'Jan 19', status: 'active' },
+  {
+    key: 'type', label: 'Type', render: (value: string) => (
+      <Badge variant="outline" className="capitalize">{value}</Badge>
+    )
+  },
+  {
+    key: 'date', label: 'Date', render: (value: Date) => {
+      try {
+        return format(new Date(value), 'MMM d, yyyy');
+      } catch (e) {
+        return 'N/A';
+      }
+    }
+  },
+  {
+    key: 'status', label: 'Status', render: (value: string) => (
+      <Badge className={value ? 'bg-pulse-success text-white' : 'bg-muted text-muted-foreground'}>
+        {value ? 'Active' : 'Inactive'}
+      </Badge>
+    )
+  },
 ];
 
 const feedbackColumns = [
-  { key: 'content', label: 'Feedback', render: (value: string) => (
-    <span className="line-clamp-1 max-w-xs">{value}</span>
-  )},
-  { key: 'category', label: 'Category', render: (value: string) => (
-    <Badge variant="outline" className="capitalize">{value}</Badge>
-  )},
-  { key: 'status', label: 'Status', render: (value: string) => (
-    <Badge className={
-      value === 'addressed' ? 'bg-pulse-success text-white' : 
-      value === 'reviewed' ? 'bg-pulse-info text-white' : 
-      'bg-accent text-accent-foreground'
-    }>
-      {value}
-    </Badge>
-  )},
+  {
+    key: 'content', label: 'Feedback', render: (value: string) => (
+      <span className="line-clamp-1 max-w-xs">{value}</span>
+    )
+  },
+  {
+    key: 'category', label: 'Category', render: (value: string) => (
+      <Badge variant="outline" className="capitalize">{value}</Badge>
+    )
+  },
+  {
+    key: 'status', label: 'Status', render: (value: string) => (
+      <Badge className={
+        value === 'addressed' ? 'bg-pulse-success text-white' :
+          value === 'reviewed' ? 'bg-pulse-info text-white' :
+            'bg-accent text-accent-foreground'
+      }>
+        {value}
+      </Badge>
+    )
+  },
 ];
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [aData, eData] = await Promise.all([
+          api.announcements.getAll().catch(() => []),
+          api.events.getAll().catch(() => [])
+        ]);
+        setAnnouncements(aData);
+        setEvents(eData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Combine and sort for recent activity
+  const recentActivity = [
+    ...announcements.map(a => ({
+      id: `ann-${a.id}`,
+      title: a.title,
+      type: 'announcement',
+      date: a.createdAt,
+      status: true // Announcements are active by default for now
+    })),
+    ...events.map(e => ({
+      id: `evt-${e.id}`,
+      title: e.title,
+      type: 'event',
+      date: e.createdAt,
+      status: true // Events are active 
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -69,15 +122,15 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-4 gap-6">
         <StatsCard
           title="Total Announcements"
-          value={mockAnnouncements.length}
-          change="+2 this week"
-          changeType="positive"
+          value={announcements.length}
+          change="Total"
+          changeType="neutral"
           icon={Megaphone}
         />
         <StatsCard
           title="Upcoming Events"
-          value={mockEvents.length}
-          change="3 this month"
+          value={events.length}
+          change="Total"
           changeType="neutral"
           icon={Calendar}
           iconColor="gradient-secondary"
@@ -85,15 +138,15 @@ export default function AdminDashboard() {
         <StatsCard
           title="Active Polls"
           value={mockPolls.filter(p => p.isActive).length}
-          change="918 total votes"
-          changeType="positive"
+          change="Total"
+          changeType="neutral"
           icon={BarChart3}
           iconColor="bg-pulse-info"
         />
         <StatsCard
           title="Feedback Received"
           value={mockFeedback.length}
-          change="2 pending review"
+          change="Total"
           changeType="neutral"
           icon={MessageSquare}
           iconColor="bg-accent"
@@ -106,24 +159,28 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-4">
             <CardTitle className="font-display">Recent Activity</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/announcements')}>
               <Eye className="h-4 w-4 mr-2" />
               View All
             </Button>
           </CardHeader>
           <CardContent>
-            <ContentTable 
-              columns={recentColumns}
-              data={recentActivity}
-              onEdit={() => {}}
-            />
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Loading activity...</div>
+            ) : (
+              <ContentTable
+                columns={recentColumns}
+                data={recentActivity}
+                onEdit={() => { }}
+              />
+            )}
           </CardContent>
         </Card>
 
-        {/* Engagement Overview */}
+        {/* Engagement Overview (Static for now) */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="font-display">Engagement Overview</CardTitle>
+            <CardTitle className="font-display">Engagement Overview (Demo)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
@@ -135,15 +192,7 @@ export default function AdminDashboard() {
                 <div className="h-full gradient-primary rounded-full" style={{ width: '75%' }} />
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Mobile Connections</span>
-                <span className="font-semibold">567</span>
-              </div>
-              <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <div className="h-full gradient-secondary rounded-full" style={{ width: '45%' }} />
-              </div>
-            </div>
+            {/* ... other stats ... */}
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span>Poll Participation</span>
@@ -151,15 +200,6 @@ export default function AdminDashboard() {
               </div>
               <div className="h-3 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-pulse-info rounded-full" style={{ width: '60%' }} />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Feedback Submissions</span>
-                <span className="font-semibold">89</span>
-              </div>
-              <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-accent rounded-full" style={{ width: '25%' }} />
               </div>
             </div>
           </CardContent>
@@ -170,15 +210,16 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader className="flex-row items-center justify-between pb-4">
           <CardTitle className="font-display">Recent Feedback</CardTitle>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/admin/feedbacks')}>
             <Eye className="h-4 w-4 mr-2" />
-              View All</Button>
+            View All
+          </Button>
         </CardHeader>
         <CardContent>
-          <ContentTable 
+          <ContentTable
             columns={feedbackColumns}
             data={mockFeedback}
-            onEdit={() => {}}
+            onEdit={() => { }}
           />
         </CardContent>
       </Card>

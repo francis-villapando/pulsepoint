@@ -17,6 +17,7 @@ export interface Event {
   venue: string;
   category: 'community' | 'sports' | 'education' | 'culture' | 'health';
   imageUrl?: string;
+  createdAt: Date;
 }
 
 export interface Poll {
@@ -48,6 +49,7 @@ export interface CarouselImage {
   imageUrl: string;
   altText: string;
   uploadDate: Date;
+  createdAt: Date;
   isActive: boolean;
   eventTitle?: string;
   eventDate?: Date;
