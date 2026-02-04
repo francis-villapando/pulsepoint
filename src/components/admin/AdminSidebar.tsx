@@ -5,7 +5,8 @@ import {
   Calendar, 
   BarChart3, 
   MessageSquare,
-  Radio
+  Radio,
+  ArchiveX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ const navItems = [
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: BarChart3, label: 'Polls', path: '/admin/polls' },
   { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks' },
+  { icon: ArchiveX, label: 'Archives', path: '/admin/archives' },
 ];
 
 export function AdminSidebar() {

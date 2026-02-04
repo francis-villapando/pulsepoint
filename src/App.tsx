@@ -12,6 +12,7 @@ import AdminEvents from "./pages/admin/AdminEvents";
 import AdminPolls from "./pages/admin/AdminPolls";
 import AdminFeedbacks from "./pages/admin/AdminFeedbacks";
 import AdminCarousel from "./pages/admin/AdminCarousel";
+import AdminArchives from "./pages/admin/AdminArchives";
 import MobileLayout from "./pages/mobile/MobileLayout";
 import MobileHome from "./pages/mobile/MobileHome";
 import MobileEvents from "./pages/mobile/MobileEvents";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="polls" element={<AdminPolls />} />
             <Route path="feedbacks" element={<AdminFeedbacks />} />
             <Route path="carousel" element={<AdminCarousel />} />
+            <Route path="archives" element={<AdminArchives />} />
           </Route>
           
           {/* Mobile Routes */}
