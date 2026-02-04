@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { CarouselForm } from '@/components/admin/CarouselForm';
 import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
-import { toast } from '@/hooks/use-toast';
 
 const columns = [
   { key: 'imageUrl', label: 'Image', render: (value: string, row: CarouselImage) => (
@@ -22,9 +21,6 @@ const columns = [
   { key: 'altText', label: 'Title', render: (value: string, row: CarouselImage) => (
     <div>
       <p className="font-medium">{value}</p>
-      {row.eventTitle && (
-        <p className="text-sm text-muted-foreground">{row.eventTitle}</p>
-      )}
     </div>
   )},
   { key: 'uploadDate', label: 'Date', render: (value: Date) => format(value, 'MMM d, yyyy') },
@@ -40,6 +36,14 @@ export default function AdminCarousel() {
   const [editingImage, setEditingImage] = useState<CarouselImage | null>(null);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
   const [deletingImage, setDeletingImage] = useState<CarouselImage | null>(null);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isUpdateConfirmationOpen, setIsUpdateConfirmationOpen] = useState(false);
+  const [imageData, setImageData] = useState({
+    altText: '',
+    eventTitle: '',
+    eventDate: new Date()
+  });
+  const [updatingImage, setUpdatingImage] = useState<CarouselImage | null>(null);
 
   const handleAddImage = (newImage: Omit<CarouselImage, 'id' | 'uploadDate'>) => {
     const image: CarouselImage = {
@@ -49,7 +53,13 @@ export default function AdminCarousel() {
       isActive: true, // Always active by default
     };
     setImages(prev => [image, ...prev]);
+    setImageData({
+      altText: newImage.altText,
+      eventTitle: newImage.eventTitle,
+      eventDate: newImage.eventDate
+    });
     setIsAddFormOpen(false);
+    setIsConfirmationOpen(true);
   };
 
   const handleEditImage = (image: CarouselImage) => {
@@ -61,6 +71,10 @@ export default function AdminCarousel() {
     setImages(prev => prev.map(img => img.id === updatedImage.id ? updatedImage : img));
     setIsEditFormOpen(false);
     setEditingImage(null);
+    
+    // Store the updated image for the success dialog
+    setUpdatingImage(updatedImage);
+    setIsUpdateConfirmationOpen(true);
   };
 
   const handleDeleteImage = (image: CarouselImage) => {
@@ -71,10 +85,6 @@ export default function AdminCarousel() {
   const confirmDelete = () => {
     if (deletingImage) {
       setImages(prev => prev.filter(img => img.id !== deletingImage.id));
-      toast({
-        title: "Image Deleted",
-        description: `${deletingImage.altText} has been removed from the carousel.`,
-      });
     }
     setIsDeleteConfirmationOpen(false);
     setDeletingImage(null);
@@ -90,9 +100,10 @@ export default function AdminCarousel() {
         </div>
         <Button 
           onClick={() => setIsAddFormOpen(true)}
-          className="gradient-primary text-primary-foreground"
+          variant="pulse"
+          size="lg"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-5 w-5 mr-2" />
           Add Image
         </Button>
       </div>
@@ -103,49 +114,6 @@ export default function AdminCarousel() {
           <CardTitle className="font-display">Carousel Images</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="gradient-primary text-primary-foreground">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Total Images</p>
-                    <p className="text-2xl font-bold">{images.length}</p>
-                  </div>
-                  <ImageIcon className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="gradient-info text-info-foreground">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Active Images</p>
-                    <p className="text-2xl font-bold">{images.filter(img => img.isActive).length}</p>
-                  </div>
-                  <ImageIcon className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="gradient-success text-success-foreground">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Recent Uploads</p>
-                    <p className="text-2xl font-bold">
-                      {images.filter(img => 
-                        img.uploadDate > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                      ).length}
-                    </p>
-                  </div>
-                  <ImageIcon className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Content Table */}
           <ContentTable 
             columns={columns}
@@ -175,6 +143,28 @@ export default function AdminCarousel() {
         }}
         onSubmit={handleUpdateImage}
         editingImage={editingImage}
+      />
+
+      {/* Creation Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        title="Image Added Successfully!"
+        description={`Your image "${imageData.altText}" has been added to the carousel.`}
+        onConfirm={() => setIsConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
+      />
+
+      {/* Update Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isUpdateConfirmationOpen}
+        onOpenChange={setIsUpdateConfirmationOpen}
+        title="Image Updated Successfully!"
+        description={`Your image "${updatingImage?.altText}" has been updated in the carousel.`}
+        onConfirm={() => setIsUpdateConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
       />
     </div>
   );

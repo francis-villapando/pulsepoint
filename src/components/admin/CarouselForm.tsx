@@ -1,5 +1,5 @@
 import { CarouselImage } from '@/types/pulsepoint';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,14 +24,38 @@ interface CarouselFormProps {
 
 export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: CarouselFormProps) {
   const [formData, setFormData] = useState<Omit<CarouselImage, 'id' | 'uploadDate'>>({
-    imageUrl: editingImage?.imageUrl || '',
-    altText: editingImage?.altText || '',
-    eventTitle: editingImage?.eventTitle || '',
-    eventDate: editingImage?.eventDate || new Date(),
-    isActive: editingImage?.isActive ?? true,
+    imageUrl: '',
+    altText: '',
+    eventTitle: '',
+    eventDate: new Date(),
+    isActive: true,
   });
   const [isUploading, setIsUploading] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(editingImage?.imageUrl || null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Sync form data with editingImage when dialog opens
+  useEffect(() => {
+    if (isOpen && editingImage) {
+      setFormData({
+        imageUrl: editingImage.imageUrl || '',
+        altText: editingImage.altText || '',
+        eventTitle: editingImage.eventTitle || '',
+        eventDate: editingImage.eventDate || new Date(),
+        isActive: editingImage.isActive ?? true,
+      });
+      setPreviewImage(editingImage.imageUrl || null);
+    } else if (!isOpen) {
+      // Reset form when dialog closes
+      setFormData({
+        imageUrl: '',
+        altText: '',
+        eventTitle: '',
+        eventDate: new Date(),
+        isActive: true,
+      });
+      setPreviewImage(null);
+    }
+  }, [isOpen, editingImage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +70,6 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
     }
 
     onSubmit(formData);
-    toast({
-      title: editingImage ? "Image Updated" : "Image Added",
-      description: editingImage 
-        ? `${formData.altText} has been updated successfully.`
-        : `${formData.altText} has been added to the carousel.`,
-    });
     
     // Reset form
     setFormData({
@@ -164,18 +182,19 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
 
           {/* Event Title */}
           <div className="space-y-2">
-            <Label htmlFor="eventTitle">Event Title (Optional)</Label>
+            <Label htmlFor="eventTitle">Event Title</Label>
             <Input
               id="eventTitle"
               placeholder="e.g., Community Clean-Up Day 2026"
               value={formData.eventTitle}
               onChange={(e) => setFormData(prev => ({ ...prev, eventTitle: e.target.value }))}
+              required
             />
           </div>
 
           {/* Event Date */}
           <div className="space-y-2">
-            <Label htmlFor="eventDate">Event Date (Optional)</Label>
+            <Label htmlFor="eventDate">Event Date</Label>
             <Input
               id="eventDate"
               type="date"
@@ -184,6 +203,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
                 ...prev, 
                 eventDate: e.target.value ? new Date(e.target.value) : new Date() 
               }))}
+              required
             />
           </div>
 

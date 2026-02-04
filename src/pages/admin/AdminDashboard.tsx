@@ -1,17 +1,9 @@
-import { StatsCard } from '@/components/admin/StatsCard';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { mockAnnouncements, mockEvents, mockPolls, mockFeedback } from '@/data/mockData';
 import { 
-  Megaphone, 
-  Calendar, 
-  BarChart3, 
-  MessageSquare,
-  Users,
-  TrendingUp,
-  Plus,
   Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -65,51 +57,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-6">
-        <StatsCard
-          title="Total Announcements"
-          value={mockAnnouncements.length}
-          change="+2 this week"
-          changeType="positive"
-          icon={Megaphone}
-        />
-        <StatsCard
-          title="Upcoming Events"
-          value={mockEvents.length}
-          change="3 this month"
-          changeType="neutral"
-          icon={Calendar}
-          iconColor="gradient-secondary"
-        />
-        <StatsCard
-          title="Active Polls"
-          value={mockPolls.filter(p => p.isActive).length}
-          change="918 total votes"
-          changeType="positive"
-          icon={BarChart3}
-          iconColor="bg-pulse-info"
-        />
-        <StatsCard
-          title="Feedback Received"
-          value={mockFeedback.length}
-          change="2 pending review"
-          changeType="neutral"
-          icon={MessageSquare}
-          iconColor="bg-accent"
-        />
-      </div>
-
       {/* Content Grid */}
       <div className="grid grid-cols-2 gap-8">
         {/* Recent Activity */}
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-4">
             <CardTitle className="font-display">Recent Activity</CardTitle>
-            <Button variant="ghost" size="sm">
-              <Eye className="h-4 w-4 mr-2" />
-              View All
-            </Button>
           </CardHeader>
           <CardContent>
             <ContentTable 
@@ -170,9 +123,6 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader className="flex-row items-center justify-between pb-4">
           <CardTitle className="font-display">Recent Feedback</CardTitle>
-          <Button variant="ghost" size="sm">
-            <Eye className="h-4 w-4 mr-2" />
-              View All</Button>
         </CardHeader>
         <CardContent>
           <ContentTable 

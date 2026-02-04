@@ -5,9 +5,7 @@ import {
   Calendar, 
   BarChart3, 
   MessageSquare,
-  Settings,
-  Radio,
-  LogOut
+  Radio
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +16,6 @@ const navItems = [
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: BarChart3, label: 'Polls', path: '/admin/polls' },
   { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 
 export function AdminSidebar() {
@@ -65,14 +62,6 @@ export function AdminSidebar() {
           })}
         </ul>
       </nav>
-
-      {/* Footer */}
-      <div className="p-4 border-t">
-        <button className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
-          <LogOut className="h-5 w-5" />
-          <span className="font-medium">Log Out</span>
-        </button>
-      </div>
     </aside>
   );
 }
