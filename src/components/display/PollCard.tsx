@@ -48,11 +48,17 @@ export function PollCard({ poll, onVote, hasVoted = false, isDisplay }: PollCard
     }
   };
 
+  const handleMobileCardClick = () => {
+    if (!isDisplay) {
+      setDialogOpen(true);
+    }
+  };
+
 return (
   <>
     <Card
       className={`overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-elevated hover:scale-[1.02] group ${isDisplay ? 'p-3' : 'p-2'} w-[400px] max-w-full h-auto max-h-[300px] overflow-y-auto`}
-      onClick={handleCardClick}
+      onClick={isDisplay ? handleCardClick : handleMobileCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start gap-2">
