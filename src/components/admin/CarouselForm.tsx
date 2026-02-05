@@ -29,6 +29,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
     eventTitle: '',
     eventDate: new Date(),
     isActive: true,
+    createdAt: new Date(),
   });
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -36,12 +37,16 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
   // Sync form data with editingImage when dialog opens
   useEffect(() => {
     if (isOpen && editingImage) {
+      // Ensure eventDate is a Date object even if it comes as a string from the API
+      const date = editingImage.eventDate ? new Date(editingImage.eventDate) : new Date();
+
       setFormData({
         imageUrl: editingImage.imageUrl || '',
         altText: editingImage.altText || '',
         eventTitle: editingImage.eventTitle || '',
-        eventDate: editingImage.eventDate || new Date(),
+        eventDate: isNaN(date.getTime()) ? new Date() : date,
         isActive: editingImage.isActive ?? true,
+        createdAt: editingImage.createdAt ? new Date(editingImage.createdAt) : new Date(),
       });
       setPreviewImage(editingImage.imageUrl || null);
     } else if (!isOpen) {
@@ -52,6 +57,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
         eventTitle: '',
         eventDate: new Date(),
         isActive: true,
+        createdAt: new Date(),
       });
       setPreviewImage(null);
     }
@@ -59,7 +65,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.imageUrl || !formData.altText) {
       toast({
         title: "Validation Error",
@@ -70,7 +76,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
     }
 
     onSubmit(formData);
-    
+
     // Reset form
     setFormData({
       imageUrl: '',
@@ -78,6 +84,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
       eventTitle: '',
       eventDate: new Date(),
       isActive: true,
+      createdAt: new Date(),
     });
     setPreviewImage(null);
     onClose();
@@ -87,21 +94,30 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
-      
-      // Simulate upload delay
-      setTimeout(() => {
-        // For demo purposes, we'll use a placeholder URL
-        // In a real app, this would upload to a cloud service
-        const imageUrl = URL.createObjectURL(file);
-        setFormData(prev => ({ ...prev, imageUrl }));
-        setPreviewImage(imageUrl);
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData(prev => ({ ...prev, imageUrl: base64String }));
+        setPreviewImage(base64String);
         setIsUploading(false);
-        
+
         toast({
           title: "Image Uploaded",
           description: "Your image has been processed successfully.",
         });
-      }, 1000);
+      };
+
+      reader.onerror = () => {
+        setIsUploading(false);
+        toast({
+          title: "Upload Error",
+          description: "Failed to read the image file.",
+          variant: "destructive",
+        });
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -118,7 +134,7 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
             {editingImage ? 'Edit Image' : 'Add New Image'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Image Upload */}
           <div className="space-y-2">
@@ -199,9 +215,9 @@ export function CarouselForm({ isOpen, onClose, onSubmit, editingImage }: Carous
               id="eventDate"
               type="date"
               value={formData.eventDate ? formData.eventDate.toISOString().split('T')[0] : ''}
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                eventDate: e.target.value ? new Date(e.target.value) : new Date() 
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                eventDate: e.target.value ? new Date(e.target.value) : new Date()
               }))}
               required
             />

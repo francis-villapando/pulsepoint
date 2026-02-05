@@ -134,14 +134,14 @@ export default function AdminCarousel() {
     try {
       await api.carousel.delete(image.id);
       toast({
-        title: "Image Deleted",
-        description: `${image.altText} has been removed from the carousel.`,
+        title: "Image Archived",
+        description: `${image.altText} has been moved to the archives.`,
       });
       fetchImages();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete image",
+        description: "Failed to archive image",
         variant: "destructive",
       });
     }

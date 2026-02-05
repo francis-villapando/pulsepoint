@@ -12,10 +12,11 @@ const announcementSchema = z.object({
     isPinned: z.boolean().default(false),
 });
 
-// GET /api/announcements (Public)
+// GET /api/announcements (Public - Non-archived only)
 router.get('/', async (req, res) => {
     try {
         const announcements = await prisma.announcement.findMany({
+            where: { isArchived: false },
             orderBy: [
                 { isPinned: 'desc' },
                 { createdAt: 'desc' }
@@ -24,6 +25,19 @@ router.get('/', async (req, res) => {
         res.json(announcements);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch announcements' });
+    }
+});
+
+// GET /api/announcements/archived (Admin)
+router.get('/archived', async (req, res) => {
+    try {
+        const announcements = await prisma.announcement.findMany({
+            where: { isArchived: true },
+            orderBy: { updatedAt: 'desc' }
+        });
+        res.json(announcements);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch archived announcements' });
     }
 });
 
@@ -59,16 +73,31 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /api/announcements/:id (Admin)
+// DELETE /api/announcements/:id (Admin - SOFT DELETE)
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.announcement.delete({
-            where: { id: parseInt(id) }
+        await prisma.announcement.update({
+            where: { id: parseInt(id) },
+            data: { isArchived: true }
         });
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ error: 'Failed to delete announcement' });
+        res.status(500).json({ error: 'Failed to archive announcement' });
+    }
+});
+
+// PUT /api/announcements/:id/restore (Admin)
+router.put('/:id/restore', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const announcement = await prisma.announcement.update({
+            where: { id: parseInt(id) },
+            data: { isArchived: false }
+        });
+        res.json(announcement);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to restore announcement' });
     }
 });
 

@@ -18,7 +18,8 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 export const api = {
     carousel: {
         getAll: () => fetchJson<CarouselImage[]>('/carousel'),
-        create: (data: Omit<CarouselImage, 'id' | 'uploadDate'>) =>
+        getArchived: () => fetchJson<CarouselImage[]>('/carousel/archived'),
+        create: (data: Omit<CarouselImage, 'id' | 'uploadDate' | 'createdAt'>) =>
             fetchJson<CarouselImage>('/carousel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -34,9 +35,14 @@ export const api = {
             fetchJson<void>(`/carousel/${id}`, {
                 method: 'DELETE',
             }),
+        restore: (id: string | number) =>
+            fetchJson<CarouselImage>(`/carousel/${id}/restore`, {
+                method: 'PUT',
+            }),
     },
     announcements: {
         getAll: () => fetchJson<Announcement[]>('/announcements'),
+        getArchived: () => fetchJson<Announcement[]>('/announcements/archived'),
         create: (data: Omit<Announcement, 'id' | 'createdAt'>) =>
             fetchJson<Announcement>('/announcements', {
                 method: 'POST',
@@ -53,10 +59,15 @@ export const api = {
             fetchJson<void>(`/announcements/${id}`, {
                 method: 'DELETE',
             }),
+        restore: (id: string | number) =>
+            fetchJson<Announcement>(`/announcements/${id}/restore`, {
+                method: 'PUT',
+            }),
     },
     events: {
         getAll: () => fetchJson<Event[]>('/events'),
-        create: (data: Omit<Event, 'id'>) =>
+        getArchived: () => fetchJson<Event[]>('/events/archived'),
+        create: (data: Omit<Event, 'id' | 'createdAt'>) =>
             fetchJson<Event>('/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -71,6 +82,10 @@ export const api = {
         delete: (id: string | number) =>
             fetchJson<void>(`/events/${id}`, {
                 method: 'DELETE',
+            }),
+        restore: (id: string | number) =>
+            fetchJson<Event>(`/events/${id}/restore`, {
+                method: 'PUT',
             }),
     },
 };

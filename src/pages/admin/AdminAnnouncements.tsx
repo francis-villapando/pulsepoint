@@ -147,14 +147,14 @@ export default function AdminAnnouncements() {
     try {
       await api.announcements.delete(item.id);
       toast({
-        title: "Deleted",
-        description: "Announcement removed successfully",
+        title: "Archived",
+        description: "Announcement moved to archives successfully",
       });
       fetchAnnouncements();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete announcement",
+        description: "Failed to archive announcement",
         variant: "destructive",
       });
     }

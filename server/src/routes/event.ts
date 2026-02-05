@@ -14,16 +14,29 @@ const eventSchema = z.object({
     venue: z.string().min(1),
 });
 
-// GET /api/events (Public)
+// GET /api/events (Public - Non-archived only)
 router.get('/', async (req, res) => {
     try {
-        // Optional: Query params for filtering by date, etc.
         const events = await prisma.event.findMany({
+            where: { isArchived: false },
             orderBy: { date: 'asc' }
         });
         res.json(events);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch events' });
+    }
+});
+
+// GET /api/events/archived (Admin)
+router.get('/archived', async (req, res) => {
+    try {
+        const events = await prisma.event.findMany({
+            where: { isArchived: true },
+            orderBy: { updatedAt: 'desc' }
+        });
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch archived events' });
     }
 });
 
@@ -70,16 +83,31 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /api/events/:id (Admin)
+// DELETE /api/events/:id (Admin - SOFT DELETE)
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.event.delete({
-            where: { id: parseInt(id) }
+        await prisma.event.update({
+            where: { id: parseInt(id) },
+            data: { isArchived: true }
         });
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ error: 'Failed to delete event' });
+        res.status(500).json({ error: 'Failed to archive event' });
+    }
+});
+
+// PUT /api/events/:id/restore (Admin)
+router.put('/:id/restore', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const event = await prisma.event.update({
+            where: { id: parseInt(id) },
+            data: { isArchived: false }
+        });
+        res.json(event);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to restore event' });
     }
 });
 

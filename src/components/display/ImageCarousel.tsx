@@ -30,7 +30,7 @@ export function ImageCarousel({ images, className, variant = 'default', autoPlay
 
     const startAutoPlay = () => {
       if (autoPlayRef.current) return;
-      
+
       autoPlayRef.current = window.setInterval(() => {
         api.scrollNext();
       }, autoPlayInterval);
@@ -89,27 +89,29 @@ export function ImageCarousel({ images, className, variant = 'default', autoPlay
                 key={image.id}
                 className="relative basis-[95%] md:basis-[90%] shrink-0"
               >
-                <img
-                  src={image.imageUrl}
-                  alt={image.altText}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
-                <div className="absolute bottom-6 left-12 right-6 text-white z-20">
-                  <div className="max-w-4xl">
-                    {image.eventTitle && (
-                      <h3 className="text-2xl md:text-3xl font-display font-bold mb-2 drop-shadow-lg">
-                        {image.eventTitle}
-                      </h3>
-                    )}
-                    {image.eventDate && (
-                      <p className="text-lg text-white/90 drop-shadow-md">
-                        {format(image.eventDate, 'MMMM d, yyyy')}
+                <div className="relative aspect-video overflow-hidden rounded-2xl h-full">
+                  <img
+                    src={image.imageUrl}
+                    alt={image.altText}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+                  <div className="absolute bottom-6 left-12 right-6 text-white z-20">
+                    <div className="max-w-4xl">
+                      {image.eventTitle && (
+                        <h3 className="text-2xl md:text-3xl font-display font-bold mb-2 drop-shadow-lg">
+                          {image.eventTitle}
+                        </h3>
+                      )}
+                      {image.eventDate && (
+                        <p className="text-lg text-white/90 drop-shadow-md">
+                          {format(new Date(image.eventDate), 'MMMM d, yyyy')}
+                        </p>
+                      )}
+                      <p className="text-sm text-white/80 mt-2 drop-shadow-md max-w-2xl">
+                        {image.altText}
                       </p>
-                    )}
-                    <p className="text-sm text-white/80 mt-2 drop-shadow-md max-w-2xl">
-                      {image.altText}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </CarouselItem>

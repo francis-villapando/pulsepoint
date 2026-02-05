@@ -142,14 +142,14 @@ export default function AdminEvents() {
     try {
       await api.events.delete(item.id);
       toast({
-        title: "Deleted",
-        description: "Event removed successfully",
+        title: "Archived",
+        description: "Event moved to archives successfully",
       });
       fetchEvents();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete event",
+        description: "Failed to archive event",
         variant: "destructive",
       });
     }
@@ -188,11 +188,11 @@ export default function AdminEvents() {
                   <Label htmlFor="date">Date</Label>
                   <Input id="date" name="date" type="date" required />
                 </div>
-              <div className="space-y-2">
-                <Label htmlFor="time">Time</Label>
-                <Input id="time" name="time" type="time" required />
-                <p className="text-xs text-muted-foreground">Please enter the event time in HH:MM format</p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Time</Label>
+                  <Input id="time" name="time" type="time" required />
+                  <p className="text-xs text-muted-foreground">Please enter the event time in HH:MM format</p>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="venue">Venue</Label>
