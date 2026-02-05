@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { Announcement, Event } from '@/types/pulsepoint';
-import { mockPolls, mockFeedback } from '@/data/mockData'; // Keep mock polls/feedback for now
+import { mockPolls, mockFeedback } from '@/data/mockData';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';

@@ -201,6 +201,7 @@ export default function AdminAnnouncements() {
                     <SelectItem value="celebration">Celebration</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Please select a category for this announcement</p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">

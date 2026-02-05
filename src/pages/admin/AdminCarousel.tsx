@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { CarouselForm } from '@/components/admin/CarouselForm';
 import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 
 const columns = [
   {
@@ -53,8 +53,20 @@ export default function AdminCarousel() {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<CarouselImage | null>(null);
-  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
-  const [deletingImage, setDeletingImage] = useState<CarouselImage | null>(null);
+
+  // Confirmation states
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isUpdateConfirmationOpen, setIsUpdateConfirmationOpen] = useState(false);
+
+  // Data states for success dialogs
+  const [imageData, setImageData] = useState({
+    altText: '',
+    eventTitle: '',
+    eventDate: new Date()
+  });
+  const [updatingImage, setUpdatingImage] = useState<CarouselImage | null>(null);
+
+  const { toast } = useToast();
 
   const fetchImages = async () => {
     try {
@@ -75,15 +87,18 @@ export default function AdminCarousel() {
     fetchImages();
   }, []);
 
-  const handleAddImage = async (newImage: Omit<CarouselImage, 'id' | 'uploadDate'>) => {
+  const handleAddImage = async (newImage: Omit<CarouselImage, 'id' | 'uploadDate' | 'createdAt'>) => {
     try {
       await api.carousel.create(newImage);
-      toast({
-        title: "Success",
-        description: "Image added successfully",
+      // Update local state for success dialog
+      setImageData({
+        altText: newImage.altText,
+        eventTitle: newImage.eventTitle || '',
+        eventDate: newImage.eventDate || new Date()
       });
       fetchImages();
       setIsAddFormOpen(false);
+      setIsConfirmationOpen(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -101,13 +116,11 @@ export default function AdminCarousel() {
   const handleUpdateImage = async (updatedImage: CarouselImage) => {
     try {
       await api.carousel.update(updatedImage.id, updatedImage);
-      toast({
-        title: "Success",
-        description: "Image updated successfully",
-      });
+      setUpdatingImage(updatedImage);
       fetchImages();
       setIsEditFormOpen(false);
       setEditingImage(null);
+      setIsUpdateConfirmationOpen(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -144,9 +157,10 @@ export default function AdminCarousel() {
         </div>
         <Button
           onClick={() => setIsAddFormOpen(true)}
-          className="gradient-primary text-primary-foreground"
+          variant="pulse"
+          size="lg"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-5 w-5 mr-2" />
           Add Image
         </Button>
       </div>
@@ -190,7 +204,7 @@ export default function AdminCarousel() {
                     <p className="text-sm opacity-90">Recent Uploads</p>
                     <p className="text-2xl font-bold">
                       {images.filter(img =>
-                        img.uploadDate > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                        new Date(img.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                       ).length}
                     </p>
                   </div>
@@ -229,6 +243,28 @@ export default function AdminCarousel() {
         }}
         onSubmit={handleUpdateImage}
         editingImage={editingImage}
+      />
+
+      {/* Creation Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        title="Image Added Successfully!"
+        description={`Your image "${imageData.altText}" has been added to the carousel.`}
+        onConfirm={() => setIsConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
+      />
+
+      {/* Update Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isUpdateConfirmationOpen}
+        onOpenChange={setIsUpdateConfirmationOpen}
+        title="Image Updated Successfully!"
+        description={`Your image "${updatingImage?.altText}" has been updated in the carousel.`}
+        onConfirm={() => setIsUpdateConfirmationOpen(false)}
+        confirmText="Close"
+        type="success"
       />
     </div>
   );

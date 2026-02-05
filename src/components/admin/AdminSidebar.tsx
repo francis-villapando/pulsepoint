@@ -5,9 +5,8 @@ import {
   Calendar,
   BarChart3,
   MessageSquare,
-  Settings,
   Radio,
-  LogOut
+  ArchiveX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +17,7 @@ const navItems = [
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: BarChart3, label: 'Polls', path: '/admin/polls' },
   { icon: MessageSquare, label: 'Feedbacks', path: '/admin/feedbacks' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: ArchiveX, label: 'Archives', path: '/admin/archives' },
 ];
 
 export function AdminSidebar() {
@@ -65,8 +64,6 @@ export function AdminSidebar() {
           })}
         </ul>
       </nav>
-
-
     </aside>
   );
 }

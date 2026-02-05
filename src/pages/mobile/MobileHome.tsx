@@ -1,24 +1,30 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Announcement, Poll } from '@/types/pulsepoint';
-import { mockPolls } from '@/data/mockData'; // Mock polls kept as backend doesn't support yet
+import { Announcement, CarouselImage, Poll } from '@/types/pulsepoint';
+import { mockPolls } from '@/data/mockData';
 import { AnnouncementCard } from '@/components/display/AnnouncementCard';
 import { PollCard } from '@/components/display/PollCard';
+import { ImageCarousel } from '@/components/display/ImageCarousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function MobileHome() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
   const [loading, setLoading] = useState(true);
   const activePoll = mockPolls.find(p => p.isActive);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await api.announcements.getAll();
-        setAnnouncements(data);
+        const [announcementsData, carouselData] = await Promise.all([
+          api.announcements.getAll().catch(() => []),
+          api.carousel.getAll().catch(() => [])
+        ]);
+        setAnnouncements(announcementsData);
+        setCarouselImages(carouselData.filter(img => img.isActive));
       } catch (error) {
-        console.error("Failed to fetch announcements", error);
+        console.error("Failed to fetch mobile home data", error);
       } finally {
         setLoading(false);
       }
@@ -45,17 +51,23 @@ export default function MobileHome() {
         </CardContent>
       </Card>
 
-      {/* Active Poll */}
-      {activePoll && (
+      {/* Image Carousel */}
+      {carouselImages.length > 0 && (
         <section>
-          <h2 className="text-lg font-display font-semibold mb-3">Quick Poll</h2>
-          <PollCard poll={activePoll} />
+          <h2 className="text-lg font-display font-semibold mb-3">Recent Events</h2>
+          <ImageCarousel
+            images={carouselImages}
+            className="w-full"
+            variant="default"
+            autoPlay={true}
+            autoPlayInterval={5000}
+          />
         </section>
       )}
 
-      {/* Announcements */}
+      {/* Announcements and Advisory */}
       <section>
-        <h2 className="text-lg font-display font-semibold mb-3">Latest Updates</h2>
+        <h2 className="text-lg font-display font-semibold mb-3">Announcements and Advisory</h2>
         <div className="space-y-3">
           {announcements.length > 0 ? announcements.map((announcement) => (
             <AnnouncementCard

@@ -12,25 +12,6 @@ import { Edit, ArchiveX } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Pin } from 'lucide-react';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -43,25 +24,20 @@ interface Column {
   render?: (value: any, row: any) => React.ReactNode;
 }
 
-interface ContentTableProps {
+interface FeedbackContentTableProps {
   columns: Column[];
   data: any[];
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
-  editTitle?: string;
-  editDescription?: string;
-  editFormType?: 'announcement' | 'event' | 'poll';
 }
 
-export function ContentTable({ columns, data, onEdit, onDelete, editTitle, editDescription, editFormType }: ContentTableProps) {
-  const [isEditConfirmationOpen, setIsEditConfirmationOpen] = useState(false);
+export function FeedbackContentTable({ columns, data, onEdit, onDelete }: FeedbackContentTableProps) {
   const [isArchiveConfirmationOpen, setIsArchiveConfirmationOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
   const [archivingItem, setArchivingItem] = useState<any>(null);
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: any, newStatus: string) => {
     if (onEdit) {
-      onEdit(item);
+      onEdit({ ...item, status: newStatus });
     }
   };
 
@@ -102,9 +78,24 @@ export function ContentTable({ columns, data, onEdit, onDelete, editTitle, editD
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   {onEdit && (
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleEdit(row)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" type="button">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleEdit(row, 'pending')}>
+                          Pending
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(row, 'reviewed')}>
+                          Reviewed
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(row, 'addressed')}>
+                          Addressed
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                   {onDelete && (
                     <Button variant="ghost" size="icon" type="button" className="text-destructive hover:text-destructive" onClick={() => handleArchive(row)}>
@@ -117,7 +108,6 @@ export function ContentTable({ columns, data, onEdit, onDelete, editTitle, editD
           ))}
         </TableBody>
       </Table>
-
 
       {/* Archive Confirmation Dialog */}
       <ConfirmationDialog

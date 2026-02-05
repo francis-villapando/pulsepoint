@@ -188,10 +188,11 @@ export default function AdminEvents() {
                   <Label htmlFor="date">Date</Label>
                   <Input id="date" name="date" type="date" required />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="time">Time</Label>
-                  <Input id="time" name="time" type="text" placeholder="e.g., 8:00 AM - 1:00 PM" required />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Time</Label>
+                <Input id="time" name="time" type="time" required />
+                <p className="text-xs text-muted-foreground">Please enter the event time in HH:MM format</p>
+              </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="venue">Venue</Label>
@@ -211,6 +212,7 @@ export default function AdminEvents() {
                     <SelectItem value="health">Health</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Please select a category for this event</p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" type="button" onClick={() => setIsOpen(false)}>Cancel</Button>

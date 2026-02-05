@@ -1,48 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
-import { CarouselImage, Announcement, Event, Poll } from '@/types/pulsepoint'; // Added Poll import even if unused/mocked for now
-import { mockPolls } from '@/data/mockData'; // Keep mock polls as per instructions
+import { CarouselImage, Announcement, Event, Poll } from '@/types/pulsepoint';
+import { mockPolls } from '@/data/mockData';
 import { AnnouncementCard } from '@/components/display/AnnouncementCard';
 import { EventCard } from '@/components/display/EventCard';
 import { PollCard } from '@/components/display/PollCard';
 import { QRCodeSection } from '@/components/display/QRCodeSection';
 import { GestureHint } from '@/components/display/GestureHint';
 import { ImageCarousel } from '@/components/display/ImageCarousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Megaphone,
   Calendar,
   BarChart3,
   Radio,
-  Cloud,
-  Droplets,
-  Wind
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function DisplayDashboard() {
-  const [activeTab, setActiveTab] = useState('announcements');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // State for fetched data
+  // Data State
   const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
+  const pages = [
+    { id: 0, title: 'Carousel', icon: '🖼️' },
+    { id: 1, title: 'Announcements', icon: '📢' },
+    { id: 2, title: 'Events', icon: '📅' },
+    { id: 3, title: 'Polls', icon: '📊' }
+  ];
 
   // Fetch Data
   const fetchData = async () => {
     try {
-      // Use Promise.allSettled to avoid one failure breaking everything, or Promise.all if strict
       const [imagesData, announcementsData, eventsData] = await Promise.all([
         api.carousel.getAll().catch(() => []),
         api.announcements.getAll().catch(() => []),
@@ -61,12 +58,70 @@ export default function DisplayDashboard() {
 
   useEffect(() => {
     fetchData();
-    // Refresh data every 60 seconds (more frequent for display)
+    // Refresh data every 60 seconds
     const dataTimer = setInterval(fetchData, 60000);
-    return () => clearInterval(dataTimer);
+    // Update time every minute
+    const timeTimer = setInterval(() => setCurrentTime(new Date()), 60000);
+
+    return () => {
+      clearInterval(dataTimer);
+      clearInterval(timeTimer);
+    };
   }, []);
 
-  if (loading) {
+  const scrollToPage = (pageIndex: number) => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const pageHeight = container.clientHeight;
+      container.scrollTo({
+        top: pageIndex * pageHeight,
+        behavior: 'smooth'
+      });
+      setCurrentPage(pageIndex);
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current && !isScrolling) {
+      const container = scrollContainerRef.current;
+      const pageHeight = container.clientHeight;
+      const scrollTop = container.scrollTop;
+      const pageIndex = Math.round(scrollTop / pageHeight);
+
+      if (pageIndex !== currentPage) {
+        setCurrentPage(pageIndex);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (currentPage < pages.length - 1) {
+        scrollToPage(currentPage + 1);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (currentPage > 0) {
+        scrollToPage(currentPage - 1);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [currentPage, isScrolling]);
+
+  if (loading && carouselImages.length === 0 && announcements.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background display-mode">
         <div className="p-8 glass-card rounded-2xl flex flex-col items-center gap-4">
@@ -77,171 +132,203 @@ export default function DisplayDashboard() {
     );
   }
 
-  const activeAnnouncements = announcements.filter(a => !a.isPinned).slice(0, 3);
-  const pinnedAnnouncements = announcements.filter(a => a.isPinned);
-  const upcomingEvents = events
-    .filter(e => new Date(e.date) >= new Date(new Date().setHours(0, 0, 0, 0))) // simple active filter
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 4);
-
   return (
     <div className="min-h-screen bg-background display-mode">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b">
-        <div className="container mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 gradient-primary rounded-2xl shadow-glow-primary">
-                <Radio className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-display font-bold text-gradient-primary">PulsePoint</h1>
-                <p className="text-muted-foreground">Community Updates Hub</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-3xl font-display font-semibold">{format(currentTime, 'h:mm a')}</p>
-                <p className="text-muted-foreground">{format(currentTime, 'EEEE, MMMM d, yyyy')}</p>
-              </div>
-              <div className="h-12 w-px bg-border" />
-              <div className="flex items-center gap-2 text-pulse-success">
-                <div className="h-3 w-3 rounded-full bg-pulse-success animate-pulse" />
-                <span className="font-medium">Live</span>
+      {/* Vertical Pagination Dots */}
+      <div className="fixed left-8 top-1/2 transform -translate-y-1/2 z-50">
+        <div className="glass-card rounded-2xl p-4 flex flex-col space-y-4">
+          {pages.map((page, index) => (
+            <button
+              key={page.id}
+              onClick={() => scrollToPage(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${currentPage === index
+                  ? 'bg-primary scale-125 shadow-glow-primary'
+                  : 'bg-muted hover:bg-muted/80'
+                }`}
+              title={page.title}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Scroll Navigation Controls */}
+      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 space-y-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scrollToPage(Math.max(0, currentPage - 1))}
+          disabled={currentPage === 0}
+          className="h-12 w-12 rounded-full glass-card shadow-lg"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scrollToPage(Math.min(pages.length - 1, currentPage + 1))}
+          disabled={currentPage === pages.length - 1}
+          className="h-12 w-12 rounded-full glass-card shadow-lg"
+        >
+          <ChevronDown className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Scroll Container */}
+      <div
+        ref={scrollContainerRef}
+        className="h-screen overflow-y-auto snap-y snap-mandatory"
+        style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none' }}
+      >
+        {/* Header */}
+        <header className="sticky top-0 z-50">
+          <div className="container mx-auto px-8 py-4">
+            <div className="glass-card rounded-2xl px-8 py-4 shadow-elevated">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 gradient-primary rounded-xl shadow-glow-primary">
+                    <Radio className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-gradient-primary">PulsePoint</h2>
+                    <p className="text-xs text-muted-foreground">Community Updates Hub</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-lg font-display font-semibold text-foreground">{format(currentTime, 'h:mm a')}</p>
+                    <p className="text-xs text-muted-foreground">{format(currentTime, 'EEE, MMM d')}</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="flex items-center gap-2 text-pulse-success">
+                    <div className="h-2 w-2 rounded-full bg-pulse-success animate-pulse" />
+                    <span className="text-sm font-medium text-foreground">Live</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Image Carousel */}
-      <section className="container mx-auto px-8 py-8 animate-slide-up">
-        <div className="glass-card rounded-2xl overflow-hidden shadow-elevated">
-          <ImageCarousel images={carouselImages} />
-        </div>
-      </section>
+        {/* Page 1: Carousel */}
+        <section className="snap-start min-h-screen relative overflow-hidden flex items-center">
+          <div className="container mx-auto px-8 h-full">
+            <div className="relative flex items-center justify-center h-full">
+              <div className="relative overflow-hidden rounded-2xl">
+                {/* Use real carousel images if available, else placeholder/empty or loading */}
+                <ImageCarousel
+                  images={carouselImages}
+                  className="w-full h-full scale-90"
+                  variant="background"
+                  autoPlay={true}
+                />
+              </div>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 lg:px-8 py-4 lg:py-8">
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
-          {/* Left Column - Main Content */}
-          <div className="w-full lg:col-span-8 space-y-6 lg:space-y-8">
-            {/* Featured Announcements */}
-            {pinnedAnnouncements.length > 0 && (
-              <section className="animate-slide-up">
-                <div className="flex items-center gap-3 mb-4">
-                  <Megaphone className="h-5 w-5 lg:h-6 lg:w-6 text-secondary" />
-                  <h2 className="text-xl lg:text-2xl font-display font-semibold">Important Updates</h2>
-                </div>
-                <div className="grid gap-3 lg:gap-4">
-                  {pinnedAnnouncements.map((announcement) => (
-                    <AnnouncementCard
-                      key={announcement.id}
-                      announcement={announcement}
-                      isDisplay
-                    />
+              {/* Left fade */}
+              <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background/90 via-background/60 to-transparent pointer-events-none z-10" />
+
+              {/* Right fade */}
+              <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none z-10" />
+            </div>
+          </div>
+        </section>
+
+        {/* Page 2: Announcements */}
+        <section className="snap-start min-h-screen flex items-center justify-center">
+          <div className="container mx-auto px-8 py-8 animate-slide-up">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Megaphone className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Announcements and Advisory</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
+                  {announcements.map((announcement, index) => (
+                    <div key={announcement.id} style={{ order: index }}>
+                      <AnnouncementCard
+                        announcement={announcement}
+                        isDisplay
+                      />
+                    </div>
                   ))}
-                </div>
-              </section>
-            )}
-
-            {/* Tabs for Content */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-slide-up w-full" style={{ animationDelay: '0.1s' }}>
-              <TabsList className="glass-card p-1 h-auto w-full flex flex-col sm:flex-row justify-start space-y-2 sm:space-y-0 sm:space-x-2">
-                <TabsTrigger value="announcements" className="text-base lg:text-lg px-4 lg:px-6 py-2 lg:py-3 flex-1 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                  <Megaphone className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
-                  Announcements
-                </TabsTrigger>
-                <TabsTrigger value="events" className="text-base lg:text-lg px-4 lg:px-6 py-2 lg:py-3 flex-1 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                  <Calendar className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
-                  Events
-                </TabsTrigger>
-                <TabsTrigger value="polls" className="text-base lg:text-lg px-4 lg:px-6 py-2 lg:py-3 flex-1 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
-                  <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
-                  Polls
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="announcements" className="mt-4 lg:mt-6">
-                <div className="grid gap-4">
-                  {activeAnnouncements.length > 0 ? activeAnnouncements.map((announcement) => (
-                    <AnnouncementCard
-                      key={announcement.id}
-                      announcement={announcement}
-                      isDisplay
-                    />
-                  )) : (
+                  {announcements.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground glass-card rounded-xl">
-                      No general announcements at this time.
+                      No announcements available.
                     </div>
                   )}
                 </div>
-              </TabsContent>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </section>
 
-              <TabsContent value="events" className="mt-4 lg:mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                  {upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      isDisplay
-                    />
-                  )) : (
-                    <div className="col-span-1 md:col-span-2 p-8 text-center text-muted-foreground glass-card rounded-xl">
-                      No upcoming events scheduled.
+        {/* Page 3: Events */}
+        <section className="snap-start min-h-screen flex items-center justify-center">
+          <div className="container mx-auto px-8 py-8 animate-slide-up">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Calendar className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Events</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
+                  {events.map((event, index) => (
+                    <div key={event.id} style={{ order: index }}>
+                      <EventCard
+                        event={event}
+                        isDisplay
+                      />
+                    </div>
+                  ))}
+                  {events.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground glass-card rounded-xl">
+                      No events available.
                     </div>
                   )}
                 </div>
-              </TabsContent>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </section>
 
-              <TabsContent value="polls" className="mt-4 lg:mt-6">
-                <div className="grid gap-4 lg:gap-6">
-                  {mockPolls.map((poll) => (
-                    <PollCard
-                      key={poll.id}
-                      poll={poll}
-                      isDisplay
-                    />
+        {/* Page 4: Polls */}
+        <section className="snap-start min-h-screen flex items-center justify-center">
+          <div className="container mx-auto px-8 py-8 animate-slide-up">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 mb-4">
+                <BarChart3 className="h-6 w-6 text-secondary" />
+                <h2 className="text-2xl font-display font-semibold">Polls</h2>
+              </div>
+              <div className="relative">
+                <div className="grid grid-rows-1 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
+                  {mockPolls.map((poll, index) => (
+                    <div key={poll.id} style={{ order: index }}>
+                      <PollCard
+                        poll={poll}
+                        isDisplay
+                      />
+                    </div>
                   ))}
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="w-full lg:col-span-4 space-y-6 lg:space-y-8 mt-6 lg:mt-0">
-            {/* Weather Widget */}
-            <div className="animate-slide-up bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-6 border border-blue-200/20 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg lg:text-xl font-semibold">Current Weather</h3>
-                <Cloud className="h-6 w-6 lg:h-8 lg:w-8 text-blue-400" />
-              </div>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-4xl lg:text-5xl font-bold">72°</span>
-                <span className="text-base lg:text-lg text-muted-foreground">Partly Cloudy</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Droplets className="h-4 w-4" />
-                  <span>Humidity: 45%</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Wind className="h-4 w-4" />
-                  <span>Wind: 8mph</span>
-                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
               </div>
             </div>
-
-            {/* QR Code Section */}
-            <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <QRCodeSection />
-            </div>
           </div>
-        </div>
-      </main>
+        </section>
 
-      {/* Gesture Hint */}
-      <GestureHint />
+        {/* Gesture Hint */}
+        <GestureHint />
+      </div>
+
+      {/* QR Code Overlay */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <QRCodeSection />
+      </div>
+
+      {/* Import Button component needed for new UI, ensure it's imported at top */}
     </div>
   );
 }
+// Note: Changed import for Button to be used
+import { Button } from '@/components/ui/button';

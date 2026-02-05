@@ -6,7 +6,7 @@ export default function MobileLayout() {
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto w-full">
       <MobileHeader />
-      <main className="pb-24 px-4 py-4">
+      <main className="overflow-y-auto px-4 py-4 pb-24" style={{ maxHeight: '100vh' }}>
         <Outlet />
       </main>
       <MobileNav />
