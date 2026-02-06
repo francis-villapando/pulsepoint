@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { mockEvents } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import { Event } from '@/types/pulsepoint';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -23,55 +24,135 @@ import {
 } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 const columns = [
-  { key: 'title', label: 'Title', render: (value: string) => (
-    <span className="font-medium">{value}</span>
-  )},
-  { key: 'category', label: 'Category', render: (value: string) => (
-    <Badge variant="outline" className="capitalize">{value}</Badge>
-  )},
-  { key: 'date', label: 'Date', render: (value: Date) => format(value, 'MMM d, yyyy')},
+  {
+    key: 'title', label: 'Title', render: (value: string) => (
+      <span className="font-medium">{value}</span>
+    )
+  },
+  {
+    key: 'category', label: 'Category', render: (value: string) => (
+      <Badge variant="outline" className="capitalize">{value}</Badge>
+    )
+  },
+  {
+    key: 'date', label: 'Date', render: (value: Date) => {
+      try {
+        return format(new Date(value), 'MMM d, yyyy');
+      } catch (e) {
+        return 'Invalid Date';
+      }
+    }
+  },
   { key: 'time', label: 'Time', render: (value: string) => value },
   { key: 'venue', label: 'Venue', render: (value: string) => value },
 ];
 
 export default function AdminEvents() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [isUpdateConfirmationOpen, setIsUpdateConfirmationOpen] = useState(false);
-  const [eventData, setEventData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    time: '',
-    venue: '',
-    category: ''
-  });
-  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulate form submission
-    setEventData({
-      title: (e.target as any).title.value,
-      description: (e.target as any).description.value,
-      date: (e.target as any).date.value,
-      time: (e.target as any).time.value,
-      venue: (e.target as any).venue.value,
-      category: (e.target as any).category.value
-    });
-    setIsOpen(false);
-    setIsConfirmationOpen(true);
+  const fetchEvents = async () => {
+    try {
+      const data = await api.events.getAll();
+      setEvents(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch events",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate edit submission
-    setIsEditOpen(false);
-    setIsUpdateConfirmationOpen(true);
+    const target = e.target as any;
+    const newEvent = {
+      title: target.title.value,
+      description: target.description.value,
+      date: target.date.value, // API schema transform handles string -> Date
+      time: target.time.value,
+      venue: target.venue.value,
+      category: target.category.value
+    };
+
+    try {
+      await api.events.create(newEvent as any);
+      toast({
+        title: "Success",
+        description: "Event created successfully",
+      });
+      fetchEvents();
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create event",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+
+    const target = e.target as any;
+    const updatedData = {
+      title: target.title.value,
+      description: target.description.value,
+      date: target.date.value,
+      time: target.time.value,
+      venue: target.venue.value,
+      category: target.category.value
+    };
+
+    try {
+      await api.events.update(editingEvent.id, updatedData);
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+      fetchEvents();
+      setIsEditOpen(false);
+      setEditingEvent(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update event",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (item: Event) => {
+    try {
+      await api.events.delete(item.id);
+      toast({
+        title: "Archived",
+        description: "Event moved to archives successfully",
+      });
+      fetchEvents();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to archive event",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -89,7 +170,7 @@ export default function AdminEvents() {
               New Event
             </Button>
           </DialogTrigger>
-            <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Create Event</DialogTitle>
             </DialogHeader>
@@ -107,11 +188,11 @@ export default function AdminEvents() {
                   <Label htmlFor="date">Date</Label>
                   <Input id="date" name="date" type="date" required />
                 </div>
-              <div className="space-y-2">
-                <Label htmlFor="time">Time</Label>
-                <Input id="time" name="time" type="time" required />
-                <p className="text-xs text-muted-foreground">Please enter the event time in HH:MM format</p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Time</Label>
+                  <Input id="time" name="time" type="time" required />
+                  <p className="text-xs text-muted-foreground">Please enter the event time in HH:MM format</p>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="venue">Venue</Label>
@@ -153,29 +234,29 @@ export default function AdminEvents() {
             <form className="space-y-6 pt-4" onSubmit={handleEditSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="edit-title">Title</Label>
-                <Input id="edit-title" name="title" placeholder="Enter event title" defaultValue={editingEvent?.title} />
+                <Input id="edit-title" name="title" placeholder="Enter event title" defaultValue={editingEvent?.title} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-description">Description</Label>
-                <Textarea id="edit-description" name="description" placeholder="Describe your event..." rows={4} defaultValue={editingEvent?.description} />
+                <Textarea id="edit-description" name="description" placeholder="Describe your event..." rows={4} defaultValue={editingEvent?.description} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-date">Date</Label>
-                  <Input id="edit-date" name="date" type="date" defaultValue={editingEvent?.date} />
+                  <Input id="edit-date" name="date" type="date" defaultValue={editingEvent?.date ? new Date(editingEvent.date).toISOString().split('T')[0] : ''} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-time">Time</Label>
-                  <Input id="edit-time" name="time" type="text" placeholder="e.g., 8:00 AM - 1:00 PM" defaultValue={editingEvent?.time} />
+                  <Input id="edit-time" name="time" type="text" placeholder="e.g., 8:00 AM - 1:00 PM" defaultValue={editingEvent?.time} required />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-venue">Venue</Label>
-                <Input id="edit-venue" name="venue" placeholder="Enter event venue" defaultValue={editingEvent?.venue} />
+                <Input id="edit-venue" name="venue" placeholder="Enter event venue" defaultValue={editingEvent?.venue} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-category">Category</Label>
-                <Select name="category" defaultValue={editingEvent?.category}>
+                <Select name="category" defaultValue={editingEvent?.category} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -203,41 +284,19 @@ export default function AdminEvents() {
           <CardTitle className="font-display">All Events</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContentTable 
+          <ContentTable
             columns={columns}
-            data={mockEvents}
+            data={events}
             onEdit={(item) => {
               setEditingEvent(item);
               setIsEditOpen(true);
             }}
-            onDelete={(item) => console.log('Archive event:', item)}
+            onDelete={handleDelete}
             editTitle="Update Event"
             editDescription="Are you sure you want to update this event? This will update the details displayed to the community."
           />
         </CardContent>
       </Card>
-
-      {/* Creation Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={isConfirmationOpen}
-        onOpenChange={setIsConfirmationOpen}
-        title="Event Created Successfully!"
-        description={`Your event "${eventData.title}" has been published to the community display.`}
-        onConfirm={() => setIsConfirmationOpen(false)}
-        confirmText="Close"
-        type="success"
-      />
-
-      {/* Update Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={isUpdateConfirmationOpen}
-        onOpenChange={setIsUpdateConfirmationOpen}
-        title="Event Updated Successfully!"
-        description={`Your event "${editingEvent?.title}" has been updated in the community display.`}
-        onConfirm={() => setIsUpdateConfirmationOpen(false)}
-        confirmText="Close"
-        type="success"
-      />
     </div>
   );
 }

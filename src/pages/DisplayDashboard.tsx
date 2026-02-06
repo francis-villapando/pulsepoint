@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { mockAnnouncements, mockEvents, mockPolls, mockCarouselImages } from '@/data/mockData';
+import { api } from '@/lib/api';
+import { CarouselImage, Announcement, Event, Poll } from '@/types/pulsepoint';
+import { mockPolls } from '@/data/mockData';
 import { AnnouncementCard } from '@/components/display/AnnouncementCard';
 import { EventCard } from '@/components/display/EventCard';
 import { PollCard } from '@/components/display/PollCard';
 import { QRCodeSection } from '@/components/display/QRCodeSection';
 import { GestureHint } from '@/components/display/GestureHint';
 import { ImageCarousel } from '@/components/display/ImageCarousel';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Megaphone, 
-  Calendar, 
-  BarChart3, 
+import {
+  Megaphone,
+  Calendar,
+  BarChart3,
   Radio,
   ChevronUp,
   ChevronDown
@@ -19,21 +19,55 @@ import {
 import { format } from 'date-fns';
 
 export default function DisplayDashboard() {
-  const [activeTab, setActiveTab] = useState('announcements');
   const [currentPage, setCurrentPage] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [announcementsPage, setAnnouncementsPage] = useState(0);
-  const [eventsPage, setEventsPage] = useState(0);
-  const [pollsPage, setPollsPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Data State
+  const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   const pages = [
-    { id: 0, title: 'Past Events & QR', icon: '🖼️' },
-    { id: 1, title: 'Announcements and Advisory', icon: '📢' },
+    { id: 0, title: 'Carousel', icon: '🖼️' },
+    { id: 1, title: 'Announcements', icon: '📢' },
     { id: 2, title: 'Events', icon: '📅' },
     { id: 3, title: 'Polls', icon: '📊' }
   ];
-  const currentTime = new Date();
-  const pinnedAnnouncements = mockAnnouncements.filter(a => a.isPinned);
+
+  // Fetch Data
+  const fetchData = async () => {
+    try {
+      const [imagesData, announcementsData, eventsData] = await Promise.all([
+        api.carousel.getAll().catch(() => []),
+        api.announcements.getAll().catch(() => []),
+        api.events.getAll().catch(() => [])
+      ]);
+
+      setCarouselImages(imagesData.filter(img => img.isActive));
+      setAnnouncements(announcementsData);
+      setEvents(eventsData);
+    } catch (error) {
+      console.error("Failed to fetch display data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // Refresh data every 60 seconds
+    const dataTimer = setInterval(fetchData, 60000);
+    // Update time every minute
+    const timeTimer = setInterval(() => setCurrentTime(new Date()), 60000);
+
+    return () => {
+      clearInterval(dataTimer);
+      clearInterval(timeTimer);
+    };
+  }, []);
 
   const scrollToPage = (pageIndex: number) => {
     if (scrollContainerRef.current) {
@@ -53,7 +87,7 @@ export default function DisplayDashboard() {
       const pageHeight = container.clientHeight;
       const scrollTop = container.scrollTop;
       const pageIndex = Math.round(scrollTop / pageHeight);
-      
+
       if (pageIndex !== currentPage) {
         setCurrentPage(pageIndex);
       }
@@ -79,13 +113,24 @@ export default function DisplayDashboard() {
     if (container) {
       container.addEventListener('scroll', handleScroll, { passive: true });
       window.addEventListener('keydown', handleKeyDown);
-      
+
       return () => {
         container.removeEventListener('scroll', handleScroll);
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, [currentPage, isScrolling]);
+
+  if (loading && carouselImages.length === 0 && announcements.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background display-mode">
+        <div className="p-8 glass-card rounded-2xl flex flex-col items-center gap-4">
+          <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-xl font-display font-medium">Loading Community Pulse...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background display-mode">
@@ -96,11 +141,10 @@ export default function DisplayDashboard() {
             <button
               key={page.id}
               onClick={() => scrollToPage(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                currentPage === index 
-                  ? 'bg-primary scale-125 shadow-glow-primary' 
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${currentPage === index
+                  ? 'bg-primary scale-125 shadow-glow-primary'
                   : 'bg-muted hover:bg-muted/80'
-              }`}
+                }`}
               title={page.title}
             />
           ))}
@@ -130,7 +174,7 @@ export default function DisplayDashboard() {
       </div>
 
       {/* Scroll Container */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="h-screen overflow-y-auto snap-y snap-mandatory"
         style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none' }}
@@ -170,11 +214,12 @@ export default function DisplayDashboard() {
           <div className="container mx-auto px-8 h-full">
             <div className="relative flex items-center justify-center h-full">
               <div className="relative overflow-hidden rounded-2xl">
-                <ImageCarousel 
-                  images={mockCarouselImages} 
+                {/* Use real carousel images if available, else placeholder/empty or loading */}
+                <ImageCarousel
+                  images={carouselImages}
                   className="w-full h-full scale-90"
                   variant="background"
-                  autoPlay={false}
+                  autoPlay={true}
                 />
               </div>
 
@@ -197,7 +242,7 @@ export default function DisplayDashboard() {
               </div>
               <div className="relative">
                 <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
-                  {mockAnnouncements.map((announcement, index) => (
+                  {announcements.map((announcement, index) => (
                     <div key={announcement.id} style={{ order: index }}>
                       <AnnouncementCard
                         announcement={announcement}
@@ -205,6 +250,11 @@ export default function DisplayDashboard() {
                       />
                     </div>
                   ))}
+                  {announcements.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground glass-card rounded-xl">
+                      No announcements available.
+                    </div>
+                  )}
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
               </div>
@@ -222,7 +272,7 @@ export default function DisplayDashboard() {
               </div>
               <div className="relative">
                 <div className="grid grid-rows-2 auto-cols-max grid-flow-col gap-4 max-h-[600px] overflow-x-auto p-6">
-                  {mockEvents.map((event, index) => (
+                  {events.map((event, index) => (
                     <div key={event.id} style={{ order: index }}>
                       <EventCard
                         event={event}
@@ -230,6 +280,11 @@ export default function DisplayDashboard() {
                       />
                     </div>
                   ))}
+                  {events.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground glass-card rounded-xl">
+                      No events available.
+                    </div>
+                  )}
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background/90 via-background/60 to-transparent pointer-events-none" />
               </div>
@@ -270,6 +325,10 @@ export default function DisplayDashboard() {
       <div className="fixed bottom-8 right-8 z-50">
         <QRCodeSection />
       </div>
+
+      {/* Import Button component needed for new UI, ensure it's imported at top */}
     </div>
   );
 }
+// Note: Changed import for Button to be used
+import { Button } from '@/components/ui/button';

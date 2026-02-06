@@ -1,13 +1,15 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { User } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminLayout() {
@@ -16,21 +18,21 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/logout', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
-      
+
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
         <header className="h-16 border-b bg-card flex items-center px-8">
           <div className="ml-auto flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="h-12 flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center">
@@ -43,8 +45,10 @@ export default function AdminLayout() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleLogout}>
-                  <User className="mr-2 h-4 w-4" />
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

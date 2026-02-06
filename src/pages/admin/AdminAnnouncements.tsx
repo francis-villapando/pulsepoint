@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { mockAnnouncements } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import { Announcement } from '@/types/pulsepoint';
 import { ContentTable } from '@/components/admin/ContentTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -24,57 +25,139 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Plus, Pin } from 'lucide-react';
 import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 const columns = [
-  { key: 'title', label: 'Title', render: (value: string, row: any) => (
-    <div className="flex items-center gap-2">
-      {row.isPinned && <Pin className="h-4 w-4 text-secondary" />}
-      <span className="font-medium">{value}</span>
-    </div>
-  )},
-  { key: 'category', label: 'Category', render: (value: string) => (
-    <Badge variant="outline" className="capitalize">{value}</Badge>
-  )},
-  { key: 'createdAt', label: 'Created', render: (value: Date) => format(value, 'MMM d, yyyy')},
-  { key: 'isPinned', label: 'Pinned', render: (value: boolean) => (
-    <Badge className={value ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}>
-      {value ? 'Pinned' : 'Normal'}
-    </Badge>
-  )},
+  {
+    key: 'title', label: 'Title', render: (value: string, row: any) => (
+      <div className="flex items-center gap-2">
+        {row.isPinned && <Pin className="h-4 w-4 text-secondary" />}
+        <span className="font-medium">{value}</span>
+      </div>
+    )
+  },
+  {
+    key: 'category', label: 'Category', render: (value: string) => (
+      <Badge variant="outline" className="capitalize">{value}</Badge>
+    )
+  },
+  {
+    key: 'createdAt', label: 'Created', render: (value: Date) => {
+      try {
+        return format(new Date(value), 'MMM d, yyyy');
+      } catch (e) {
+        return 'Invalid Date';
+      }
+    }
+  },
+  {
+    key: 'isPinned', label: 'Pinned', render: (value: boolean) => (
+      <Badge className={value ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'}>
+        {value ? 'Pinned' : 'Normal'}
+      </Badge>
+    )
+  },
 ];
 
 export default function AdminAnnouncements() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [isUpdateConfirmationOpen, setIsUpdateConfirmationOpen] = useState(false);
-  const [announcementData, setAnnouncementData] = useState({
-    title: '',
-    content: '',
-    category: '',
-    isPinned: false
-  });
-  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simulate form submission
-    setAnnouncementData({
-      title: (e.target as any).title.value,
-      content: (e.target as any).content.value,
-      category: (e.target as any).category.value,
-      isPinned: (e.target as any).pinned.checked
-    });
-    setIsOpen(false);
-    setIsConfirmationOpen(true);
+  const fetchAnnouncements = async () => {
+    try {
+      const data = await api.announcements.getAll();
+      setAnnouncements(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch announcements",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate edit submission
-    setIsEditOpen(false);
-    setIsUpdateConfirmationOpen(true);
+    const target = e.target as any;
+    const newAnnouncement = {
+      title: target.title.value,
+      content: target.content.value,
+      category: target.category.value,
+      isPinned: target.pinned.checked
+    };
+
+    try {
+      await api.announcements.create(newAnnouncement as any); // using any to bypass Omit check for now if strict
+      toast({
+        title: "Success",
+        description: "Announcement created successfully",
+      });
+      fetchAnnouncements();
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create announcement",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAnnouncement) return;
+
+    const target = e.target as any;
+    const updatedData = {
+      title: target.title.value,
+      content: target.content.value,
+      category: target.category.value,
+      isPinned: target.pinned.checked
+    };
+
+    try {
+      await api.announcements.update(editingAnnouncement.id, updatedData);
+      toast({
+        title: "Success",
+        description: "Announcement updated successfully",
+      });
+      fetchAnnouncements();
+      setIsEditOpen(false);
+      setEditingAnnouncement(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update announcement",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (item: Announcement) => {
+    try {
+      await api.announcements.delete(item.id);
+      toast({
+        title: "Archived",
+        description: "Announcement moved to archives successfully",
+      });
+      fetchAnnouncements();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to archive announcement",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -92,7 +175,7 @@ export default function AdminAnnouncements() {
               New Announcement
             </Button>
           </DialogTrigger>
-            <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Create Announcement</DialogTitle>
             </DialogHeader>
@@ -147,15 +230,15 @@ export default function AdminAnnouncements() {
             <form className="space-y-6 pt-4" onSubmit={handleEditSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="edit-title">Title</Label>
-                <Input id="edit-title" name="title" placeholder="Enter announcement title" defaultValue={editingAnnouncement?.title} />
+                <Input id="edit-title" name="title" placeholder="Enter announcement title" defaultValue={editingAnnouncement?.title} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-content">Content</Label>
-                <Textarea id="edit-content" name="content" placeholder="Write your announcement..." rows={4} defaultValue={editingAnnouncement?.content} />
+                <Textarea id="edit-content" name="content" placeholder="Write your announcement..." rows={4} defaultValue={editingAnnouncement?.content} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-category">Category</Label>
-                <Select name="category" defaultValue={editingAnnouncement?.category}>
+                <Select name="category" defaultValue={editingAnnouncement?.category} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -189,41 +272,19 @@ export default function AdminAnnouncements() {
           <CardTitle className="font-display">All Announcements</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContentTable 
+          <ContentTable
             columns={columns}
-            data={mockAnnouncements}
+            data={announcements}
             onEdit={(item) => {
               setEditingAnnouncement(item);
               setIsEditOpen(true);
             }}
-            onDelete={(item) => console.log('Archive announcement:', item)}
+            onDelete={handleDelete}
             editTitle="Update Announcement"
             editDescription="Are you sure you want to update this announcement? This will update the content displayed to the community."
           />
         </CardContent>
       </Card>
-
-      {/* Creation Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={isConfirmationOpen}
-        onOpenChange={setIsConfirmationOpen}
-        title="Announcement Created Successfully!"
-        description={`Your announcement "${announcementData.title}" has been published to the community display.`}
-        onConfirm={() => setIsConfirmationOpen(false)}
-        confirmText="Close"
-        type="success"
-      />
-
-      {/* Update Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={isUpdateConfirmationOpen}
-        onOpenChange={setIsUpdateConfirmationOpen}
-        title="Announcement Updated Successfully!"
-        description={`Your announcement "${editingAnnouncement?.title}" has been updated in the community display.`}
-        onConfirm={() => setIsUpdateConfirmationOpen(false)}
-        confirmText="Close"
-        type="success"
-      />
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Megaphone, 
-  Calendar, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Megaphone,
+  Calendar,
+  BarChart3,
   MessageSquare,
   Radio,
   ArchiveX
@@ -42,9 +42,9 @@ export function AdminSidebar() {
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path || 
+            const isActive = location.pathname === item.path ||
               (item.path !== '/admin' && location.pathname.startsWith(item.path));
-            
+
             return (
               <li key={item.path}>
                 <NavLink

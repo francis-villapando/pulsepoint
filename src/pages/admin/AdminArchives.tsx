@@ -1,70 +1,128 @@
-import { useState } from 'react';
-import { mockAnnouncements, mockEvents, mockPolls, mockFeedback, mockCarouselImages } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import { ArchivesContentTable } from '@/components/admin/ArchivesContentTable';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive, RotateCcw } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
-// Mock archived data - in a real app, this would come from your database
-const mockArchivedItems = [
-  {
-    id: 'archive-1',
-    type: 'carousel' as const,
-    title: 'Community Clean-Up Day 2026',
-    content: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&h=400&fit=crop',
-    archiveDate: new Date('2026-01-22'),
-  },
-  {
-    id: 'archive-2',
-    type: 'announcement' as const,
-    title: 'Water Main Maintenance Notice',
-    content: 'Scheduled maintenance on Oak Street water main. Expect reduced water pressure from 10 PM to 6 AM on January 25th.',
-    archiveDate: new Date('2026-01-21'),
-  },
-  {
-    id: 'archive-3',
-    type: 'event' as const,
-    title: 'Farmers Market',
-    content: 'Fresh local produce, artisan goods, and live music every Saturday morning.',
-    archiveDate: new Date('2026-01-20'),
-  },
-  {
-    id: 'archive-4',
-    type: 'poll' as const,
-    title: 'What should be the priority for next year\'s community budget?',
-    content: 'Road repairs, Park improvements, Public safety, Youth programs',
-    archiveDate: new Date('2026-01-19'),
-  },
-  {
-    id: 'archive-5',
-    type: 'feedback' as const,
-    title: 'The new bike lanes on Main Street are wonderful!',
-    content: 'Makes commuting so much safer.',
-    archiveDate: new Date('2026-01-18'),
-  },
-];
+interface ArchiveItem {
+  id: string;
+  type: 'carousel' | 'announcement' | 'event' | 'poll' | 'feedback';
+  title: string;
+  content: string;
+  archiveDate: Date;
+}
 
 const columns = [
-  { key: 'type', label: 'Type', render: (value: string) => (
-    <span className="font-medium capitalize">
-      {value === 'carousel' ? 'Carousel Image' : 
-       value === 'announcement' ? 'Announcement' :
-       value === 'event' ? 'Event' :
-       value === 'poll' ? 'Poll' : 'Feedback'}
-    </span>
-  )},
-  { key: 'title', label: 'Title/Question/Feedback', render: (value: string) => (
-    <span className="font-medium line-clamp-2">{value}</span>
-  )},
-  { key: 'archiveDate', label: 'Archive Date', render: (value: Date) => format(value, 'MMM d, yyyy')},
+  {
+    key: 'type',
+    label: 'Type',
+    render: (value: string) => (
+      <span className="font-medium capitalize">
+        {value === 'carousel' ? 'Carousel Image' :
+          value === 'announcement' ? 'Announcement' :
+            value === 'event' ? 'Event' :
+              value === 'poll' ? 'Poll' : 'Feedback'}
+      </span>
+    )
+  },
+  {
+    key: 'title',
+    label: 'Title/Question/Feedback',
+    render: (value: string) => (
+      <span className="font-medium line-clamp-2">{value}</span>
+    )
+  },
+  {
+    key: 'archiveDate',
+    label: 'Archive Date',
+    render: (value: Date) => {
+      try {
+        return format(new Date(value), 'MMM d, yyyy');
+      } catch (e) {
+        return 'Invalid Date';
+      }
+    }
+  },
 ];
 
 export default function AdminArchives() {
-  const handleRestore = (item: any) => {
-    // In a real app, this would call your API to restore the item
-    console.log('Restore item:', item);
+  const [archivedItems, setArchivedItems] = useState<ArchiveItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchArchives = async () => {
+    try {
+      setLoading(true);
+      const [carousel, announcements, events] = await Promise.all([
+        api.carousel.getArchived().catch(() => []),
+        api.announcements.getArchived().catch(() => []),
+        api.events.getArchived().catch(() => []),
+      ]);
+
+      const items: ArchiveItem[] = [
+        ...carousel.map(item => ({
+          id: String(item.id),
+          type: 'carousel' as const,
+          title: item.altText,
+          content: item.imageUrl,
+          archiveDate: new Date(item.updatedAt || Date.now()),
+        })),
+        ...announcements.map(item => ({
+          id: String(item.id),
+          type: 'announcement' as const,
+          title: item.title,
+          content: item.content,
+          archiveDate: new Date(item.updatedAt || Date.now()),
+        })),
+        ...events.map(item => ({
+          id: String(item.id),
+          type: 'event' as const,
+          title: item.title,
+          content: item.description,
+          archiveDate: new Date(item.updatedAt || Date.now()),
+        })),
+      ];
+
+      // Sort by archive date descending
+      items.sort((a, b) => b.archiveDate.getTime() - a.archiveDate.getTime());
+      setArchivedItems(items);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch archives",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArchives();
+  }, []);
+
+  const handleRestore = async (item: ArchiveItem) => {
+    try {
+      if (item.type === 'carousel') {
+        await api.carousel.restore(item.id);
+      } else if (item.type === 'announcement') {
+        await api.announcements.restore(item.id);
+      } else if (item.type === 'event') {
+        await api.events.restore(item.id);
+      }
+
+      toast({
+        title: "Restored",
+        description: `${item.title} has been restored successfully.`,
+      });
+      fetchArchives();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to restore ${item.type}`,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -83,11 +141,17 @@ export default function AdminArchives() {
           <CardTitle className="font-display">All Archived Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <ArchivesContentTable 
-            columns={columns}
-            data={mockArchivedItems}
-            onRestore={handleRestore}
-          />
+          {loading ? (
+            <div className="py-8 text-center text-muted-foreground">Loading archives...</div>
+          ) : archivedItems.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">No archived items found.</div>
+          ) : (
+            <ArchivesContentTable
+              columns={columns}
+              data={archivedItems}
+              onRestore={handleRestore}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
