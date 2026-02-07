@@ -14,14 +14,15 @@ interface PollDialogProps {
   children?: React.ReactNode;
   onVote?: (pollId: string, optionId: string) => void;
   hasVoted?: boolean;
+  isDisplay?: boolean;
 }
 
-export function PollDialog({ poll, isOpen, onOpenChange, children, onVote, hasVoted = false }: PollDialogProps) {
+export function PollDialog({ poll, isOpen, onOpenChange, children, onVote, hasVoted = false, isDisplay = false }: PollDialogProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleOptionSelect = (optionId: string) => {
-    if (hasVoted || !onVote) return;
+    if (hasVoted || !onVote || isDisplay) return;
     setSelectedOption(optionId);
   };
 
@@ -63,42 +64,67 @@ export function PollDialog({ poll, isOpen, onOpenChange, children, onVote, hasVo
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-3">
-              {poll.options.map((option) => {
-                const isSelected = selectedOption === option.id;
+            {isDisplay ? (
+              // Display view: show stats only (Match PollCard content)
+              <div className="space-y-4">
+                {poll.options.map((option) => {
+                  const percentage = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
 
-                return (
-                  <div
-                    key={option.id}
-                    className={`space-y-2 cursor-pointer ${hasVoted ? 'opacity-50' : ''}`}
-                    onClick={() => handleOptionSelect(option.id)}
-                  >
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className={`p-2 rounded-lg transition-all ${isSelected ? 'bg-primary/10' : 'bg-muted/50'} w-full`}>
-                        <span className={`font-medium ${isSelected ? 'text-primary' : ''}`}>
-                          {option.text}
-                        </span>
+                  return (
+                    <div key={option.id} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{option.text}</span>
+                        <span className="text-muted-foreground">{percentage}%</span>
                       </div>
+                      <Progress value={percentage} className="h-2" />
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+                <div className="flex items-center justify-center gap-1 text-sm text-pulse-success pt-2">
+                  <span>Current voting statistics</span>
+                </div>
+              </div>
+            ) : (
+              // Mobile view: voting functionality
+              <>
+                <div className="space-y-3">
+                  {poll.options.map((option) => {
+                    const isSelected = selectedOption === option.id;
 
-            {!hasVoted && onVote && (
-              <Button
-                variant="pulse"
-                onClick={handleVote}
-                disabled={!selectedOption}
-                className="w-full"
-              >
-                Submit Vote
-              </Button>
+                    return (
+                      <div
+                        key={option.id}
+                        className={`space-y-2 cursor-pointer ${hasVoted ? 'opacity-50' : ''}`}
+                        onClick={() => handleOptionSelect(option.id)}
+                      >
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className={`p-3 rounded-lg transition-all ${isSelected ? 'bg-primary/10 border-primary/20 border' : 'bg-muted/30 border-transparent border'} w-full`}>
+                            <span className={`font-medium ${isSelected ? 'text-primary' : ''}`}>
+                              {option.text}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {!hasVoted && onVote && (
+                  <Button
+                    variant="pulse"
+                    onClick={handleVote}
+                    disabled={!selectedOption}
+                    className="w-full"
+                  >
+                    Submit Vote
+                  </Button>
+                )}
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
+                  <span>Click options to select your choice</span>
+                </div>
+              </>
             )}
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Click options to select your choice</span>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -115,3 +141,4 @@ export function PollDialog({ poll, isOpen, onOpenChange, children, onVote, hasVo
     </>
   );
 }
+
