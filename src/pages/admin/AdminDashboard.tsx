@@ -173,7 +173,7 @@ export default function AdminDashboard() {
         {/* Engagement Overview (Static for now) */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="font-display">Engagement Overview (Demo)</CardTitle>
+            <CardTitle className="font-display">Engagement Overview</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
