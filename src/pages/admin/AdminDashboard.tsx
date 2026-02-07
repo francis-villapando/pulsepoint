@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { Announcement, Event } from '@/types/pulsepoint';
 import { mockPolls, mockFeedback } from '@/data/mockData';
@@ -12,8 +11,7 @@ import {
   Megaphone,
   Calendar,
   BarChart3,
-  MessageSquare,
-  Eye
+  MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -67,7 +65,6 @@ const feedbackColumns = [
 ];
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,12 +154,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 gap-8">
         {/* Recent Activity */}
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-4">
+          <CardHeader className="pb-4">
             <CardTitle className="font-display">Recent Activity</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/announcements')}>
-              <Eye className="h-4 w-4 mr-2" />
-              View All
-            </Button>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -208,12 +201,8 @@ export default function AdminDashboard() {
 
       {/* Recent Feedback */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between pb-4">
+        <CardHeader className="pb-4">
           <CardTitle className="font-display">Recent Feedback</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin/feedbacks')}>
-            <Eye className="h-4 w-4 mr-2" />
-            View All
-          </Button>
         </CardHeader>
         <CardContent>
           <ContentTable
